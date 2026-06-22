@@ -113,7 +113,7 @@ button {
 .control input:focus,
 .control select:focus,
 .date-button:focus-visible,
-.date-popover input:focus,
+.native-date-input:focus,
 .role-field input:focus,
 .icon-button:focus-visible,
 .export-action:focus-visible,
@@ -162,24 +162,15 @@ button {
   font-weight: 400;
 }
 
-.date-popover {
+.native-date-input {
   position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  z-index: 50;
-  padding: 10px;
-  border: 1px solid rgba(239, 68, 68, 0.42);
-  border-radius: 8px;
-  background: var(--paper);
-  box-shadow: 0 18px 48px rgba(80, 35, 35, 0.18);
-}
-
-.date-popover input {
-  min-height: 40px;
-  border: 1px solid #d2c7b5;
-  border-radius: 7px;
-  padding: 8px 10px;
-  background: #fffaf1;
+  left: 10px;
+  bottom: 8px;
+  width: 1px;
+  height: 1px;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .role-grid {

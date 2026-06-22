@@ -16,8 +16,10 @@ import './styles.css';
 
 const TTL_MS = 60 * 60 * 1000;
 const STORAGE_KEY = 'shinkal-checklist-cache-v3';
-const PDF_PAGE_WIDTH = 1100;
-const PDF_PAGE_HEIGHT = 1500;
+const EXPORT_CONTENT_WIDTH = 1100;
+const EXPORT_CONTENT_HEIGHT = 1500;
+const PDF_PAGE_WIDTH = EXPORT_CONTENT_WIDTH * 2;
+const PDF_PAGE_HEIGHT = EXPORT_CONTENT_HEIGHT * 2;
 
 const checklistPages = [
   {
@@ -365,7 +367,11 @@ function App() {
     setCache((current) => {
       const nextPages = { ...current.pages };
       delete nextPages[selectedId];
-      return { ...current, pages: nextPages };
+      return {
+        ...current,
+        global: { ...current.global, date: '', manager: '' },
+        pages: nextPages,
+      };
     });
   }
 
@@ -378,16 +384,16 @@ function App() {
         unit: 'px',
         format: [PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT],
       });
-      pdf.setDisplayMode('25%', 'continuous', 'UseNone');
+      pdf.setDisplayMode('50%', 'continuous', 'UseNone');
 
       for (const [index, page] of checklistPages.entries()) {
         const node = exportRefs.current[page.id];
         const canvas = await html2canvas(node, {
           backgroundColor: '#f7f5ef',
-          width: PDF_PAGE_WIDTH,
-          height: PDF_PAGE_HEIGHT,
-          windowWidth: PDF_PAGE_WIDTH,
-          windowHeight: PDF_PAGE_HEIGHT,
+          width: EXPORT_CONTENT_WIDTH,
+          height: EXPORT_CONTENT_HEIGHT,
+          windowWidth: EXPORT_CONTENT_WIDTH,
+          windowHeight: EXPORT_CONTENT_HEIGHT,
           scale: 2,
           useCORS: true,
         });
@@ -395,7 +401,16 @@ function App() {
         if (index > 0) pdf.addPage([PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT], 'portrait');
         const width = pdf.internal.pageSize.getWidth();
         const height = pdf.internal.pageSize.getHeight();
-        pdf.addImage(image, 'JPEG', 0, 0, width, height);
+        const contentWidth = width / 2;
+        const contentHeight = height / 2;
+        pdf.addImage(
+          image,
+          'JPEG',
+          (width - contentWidth) / 2,
+          (height - contentHeight) / 2,
+          contentWidth,
+          contentHeight,
+        );
       }
 
       const today = new Date().toISOString().slice(0, 10);
@@ -513,28 +528,34 @@ function TopBar({
 }
 
 function DatePickerButton({ value, onChange }) {
-  const [open, setOpen] = useState(false);
+  const inputRef = useRef(null);
+
+  function openPicker() {
+    const input = inputRef.current;
+    if (!input) return;
+    input.focus();
+    if (typeof input.showPicker === 'function') {
+      input.showPicker();
+    } else {
+      input.click();
+    }
+  }
 
   return (
     <div className="control date-control">
       <span>날짜</span>
-      <button type="button" className="date-button" onClick={() => setOpen((current) => !current)}>
+      <button type="button" className="date-button" onClick={openPicker}>
         <CalendarDays size={18} />
         <strong>{value || '날짜 선택'}</strong>
       </button>
-      {open && (
-        <div className="date-popover">
-          <input
-            type="date"
-            value={value}
-            autoFocus
-            onChange={(event) => {
-              onChange(event.target.value);
-              setOpen(false);
-            }}
-          />
-        </div>
-      )}
+      <input
+        ref={inputRef}
+        className="native-date-input"
+        type="date"
+        value={value}
+        tabIndex={-1}
+        onChange={(event) => onChange(event.target.value)}
+      />
     </div>
   );
 }

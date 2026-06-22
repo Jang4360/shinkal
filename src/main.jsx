@@ -16,6 +16,8 @@ import './styles.css';
 
 const TTL_MS = 60 * 60 * 1000;
 const STORAGE_KEY = 'shinkal-checklist-cache-v3';
+const PDF_PAGE_WIDTH = 1100;
+const PDF_PAGE_HEIGHT = 1500;
 
 const checklistPages = [
   {
@@ -371,17 +373,26 @@ function App() {
     setExporting(true);
     try {
       await new Promise((resolve) => requestAnimationFrame(resolve));
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [1100, 1500] });
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT],
+      });
+      pdf.setDisplayMode('25%', 'continuous', 'UseNone');
 
       for (const [index, page] of checklistPages.entries()) {
         const node = exportRefs.current[page.id];
         const canvas = await html2canvas(node, {
           backgroundColor: '#f7f5ef',
+          width: PDF_PAGE_WIDTH,
+          height: PDF_PAGE_HEIGHT,
+          windowWidth: PDF_PAGE_WIDTH,
+          windowHeight: PDF_PAGE_HEIGHT,
           scale: 2,
           useCORS: true,
         });
         const image = canvas.toDataURL('image/jpeg', 0.94);
-        if (index > 0) pdf.addPage([canvas.width, canvas.height], 'portrait');
+        if (index > 0) pdf.addPage([PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT], 'portrait');
         const width = pdf.internal.pageSize.getWidth();
         const height = pdf.internal.pageSize.getHeight();
         pdf.addImage(image, 'JPEG', 0, 0, width, height);

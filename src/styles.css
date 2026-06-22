@@ -31,11 +31,7 @@ button {
 .app {
   min-height: 100vh;
   padding: 18px;
-  background:
-    linear-gradient(90deg, rgba(239, 68, 68, 0.08) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(239, 68, 68, 0.06) 1px, transparent 1px),
-    #f7f5ef;
-  background-size: 36px 36px;
+  background: #f7f5ef;
 }
 
 .topbar {
@@ -163,7 +159,7 @@ button {
 }
 
 .date-button strong {
-  font-weight: 850;
+  font-weight: 400;
 }
 
 .date-popover {

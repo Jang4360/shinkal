@@ -18,8 +18,6 @@ const TTL_MS = 60 * 60 * 1000;
 const STORAGE_KEY = 'shinkal-checklist-cache-v3';
 const EXPORT_CONTENT_WIDTH = 1100;
 const EXPORT_CONTENT_HEIGHT = 1500;
-const PDF_PAGE_WIDTH = EXPORT_CONTENT_WIDTH * 2;
-const PDF_PAGE_HEIGHT = EXPORT_CONTENT_HEIGHT * 2;
 
 const checklistPages = [
   {
@@ -382,7 +380,7 @@ function App() {
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'px',
-        format: [PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT],
+        format: [EXPORT_CONTENT_WIDTH, EXPORT_CONTENT_HEIGHT],
       });
       pdf.setDisplayMode('50%', 'continuous', 'UseNone');
 
@@ -398,19 +396,10 @@ function App() {
           useCORS: true,
         });
         const image = canvas.toDataURL('image/jpeg', 0.94);
-        if (index > 0) pdf.addPage([PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT], 'portrait');
+        if (index > 0) pdf.addPage([EXPORT_CONTENT_WIDTH, EXPORT_CONTENT_HEIGHT], 'portrait');
         const width = pdf.internal.pageSize.getWidth();
         const height = pdf.internal.pageSize.getHeight();
-        const contentWidth = width / 2;
-        const contentHeight = height / 2;
-        pdf.addImage(
-          image,
-          'JPEG',
-          (width - contentWidth) / 2,
-          (height - contentHeight) / 2,
-          contentWidth,
-          contentHeight,
-        );
+        pdf.addImage(image, 'JPEG', 0, 0, width, height);
       }
 
       const today = new Date().toISOString().slice(0, 10);

@@ -1,4 +1,8 @@
 :root {
+  --red: #EF4444;
+  --red-dark: #C1121F;
+  --paper: #fffdf8;
+  --line: #e0c7c7;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: #191714;
   background: #f7f5ef;
@@ -28,8 +32,8 @@ button {
   min-height: 100vh;
   padding: 18px;
   background:
-    linear-gradient(90deg, rgba(167, 20, 31, 0.06) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(167, 20, 31, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(239, 68, 68, 0.08) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(239, 68, 68, 0.06) 1px, transparent 1px),
     #f7f5ef;
   background-size: 36px 36px;
 }
@@ -39,13 +43,14 @@ button {
   top: 12px;
   z-index: 30;
   display: grid;
-  grid-template-columns: 180px minmax(220px, 1.2fr) repeat(3, minmax(150px, 0.75fr)) auto auto;
+  grid-template-columns: 180px minmax(240px, 1.2fr) minmax(150px, 0.55fr) minmax(150px, 0.65fr) auto;
   gap: 10px;
   align-items: end;
   max-width: 1480px;
   margin: 0 auto 18px;
   padding: 10px;
-  border: 1px solid #dad2c2;
+  border: 1px solid rgba(239, 68, 68, 0.38);
+  border-top: 4px solid var(--red);
   border-radius: 8px;
   background: rgba(255, 253, 248, 0.96);
   box-shadow: 0 14px 40px rgba(55, 42, 28, 0.12);
@@ -65,7 +70,7 @@ button {
   height: 42px;
   place-items: center;
   border-radius: 8px;
-  background: #b30b16;
+  background: var(--red);
   color: #fffdf8;
 }
 
@@ -98,7 +103,8 @@ button {
 }
 
 .control input,
-.control select {
+.control select,
+.date-button {
   width: 100%;
   min-height: 42px;
   border: 1px solid #d2c7b5;
@@ -110,34 +116,14 @@ button {
 
 .control input:focus,
 .control select:focus,
+.date-button:focus-visible,
+.date-popover input:focus,
+.role-field input:focus,
 .icon-button:focus-visible,
 .export-action:focus-visible,
 .check-row:focus-visible {
-  outline: 3px solid rgba(179, 11, 22, 0.22);
+  outline: 3px solid rgba(239, 68, 68, 0.24);
   outline-offset: 2px;
-}
-
-.score-pill {
-  min-height: 42px;
-  display: inline-flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 4px;
-  padding: 0 14px;
-  border-radius: 7px;
-  background: #191714;
-  color: #fffdf8;
-  font-weight: 900;
-}
-
-.score-pill span {
-  font-size: 22px;
-}
-
-.score-pill small {
-  color: #d8cfbf;
-  font-size: 13px;
-  font-weight: 800;
 }
 
 .icon-button,
@@ -155,8 +141,99 @@ button {
 }
 
 .icon-button.danger {
-  background: #b30b16;
+  background: var(--red);
   color: #fffdf8;
+}
+
+.date-control {
+  position: relative;
+}
+
+.date-button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.date-button svg {
+  color: var(--red);
+}
+
+.date-button strong {
+  font-weight: 850;
+}
+
+.date-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 50;
+  padding: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.42);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 18px 48px rgba(80, 35, 35, 0.18);
+}
+
+.date-popover input {
+  min-height: 40px;
+  border: 1px solid #d2c7b5;
+  border-radius: 7px;
+  padding: 8px 10px;
+  background: #fffaf1;
+}
+
+.role-grid {
+  grid-column: 2 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.role-field {
+  display: grid;
+  gap: 5px;
+}
+
+.role-field span {
+  color: var(--red-dark);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.role-field input {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid rgba(239, 68, 68, 0.36);
+  border-radius: 7px;
+  padding: 8px 10px;
+  background: #fffdf8;
+}
+
+.role-empty {
+  grid-column: 2 / -1;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px dashed rgba(239, 68, 68, 0.44);
+  border-radius: 8px;
+  color: #7d615e;
+  background: rgba(239, 68, 68, 0.05);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.role-empty svg {
+  color: var(--red);
 }
 
 .workspace {
@@ -173,11 +250,10 @@ button {
 }
 
 .page-hero {
-  display: flex;
-  justify-content: space-between;
-  gap: 22px;
+  display: block;
   padding: 28px;
-  border: 1px solid #d7cbb7;
+  border: 1px solid rgba(239, 68, 68, 0.34);
+  border-top: 4px solid var(--red);
   border-radius: 8px;
   background: #fffdf8;
 }
@@ -210,45 +286,26 @@ button {
 }
 
 .phase-open {
-  background: #14635c;
+  background: var(--red);
 }
 
 .phase-run {
-  background: #8b4a11;
+  background: var(--red);
 }
 
 .phase-close {
-  background: #393b75;
-}
-
-.hero-score {
-  flex: 0 0 auto;
-  min-width: 140px;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  border-left: 1px solid #e5dccc;
-}
-
-.hero-score strong {
-  font-size: clamp(44px, 7vw, 82px);
-  line-height: 0.9;
-}
-
-.hero-score span {
-  color: #6d6252;
-  font-weight: 900;
+  background: var(--red);
 }
 
 .meta-strip {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 0.8fr 0.8fr minmax(0, 1.7fr) 0.7fr;
   gap: 1px;
   margin-top: 10px;
   overflow: hidden;
-  border: 1px solid #d7cbb7;
+  border: 1px solid rgba(239, 68, 68, 0.26);
   border-radius: 8px;
-  background: #d7cbb7;
+  background: rgba(239, 68, 68, 0.25);
 }
 
 .meta {
@@ -273,29 +330,14 @@ button {
   white-space: nowrap;
 }
 
-.progress-track {
-  height: 10px;
-  margin: 14px 0 16px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #e5ddcf;
-}
-
-.progress-track span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #b30b16, #e16931);
-  transition: width 160ms ease;
-}
-
 .sections {
   display: grid;
   gap: 14px;
+  margin-top: 16px;
 }
 
 .section-block {
-  border: 1px solid #d7cbb7;
+  border: 1px solid rgba(239, 68, 68, 0.22);
   border-radius: 8px;
   background: #fffdf8;
   overflow: hidden;
@@ -307,7 +349,8 @@ button {
   gap: 12px;
   align-items: center;
   padding: 14px 16px;
-  border-bottom: 1px solid #ece4d6;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.14);
+  background: rgba(239, 68, 68, 0.04);
 }
 
 .section-head h2 {
@@ -316,7 +359,7 @@ button {
 }
 
 .section-head span {
-  color: #b30b16;
+  color: var(--red);
   font-weight: 900;
 }
 
@@ -344,11 +387,11 @@ button {
 }
 
 .check-row:hover {
-  background: #fff6e5;
+  background: rgba(239, 68, 68, 0.05);
 }
 
 .check-row.is-checked {
-  background: #f8efe7;
+  background: rgba(239, 68, 68, 0.08);
 }
 
 .check-box {
@@ -363,8 +406,8 @@ button {
 }
 
 .is-checked .check-box {
-  border-color: #b30b16;
-  background: #b30b16;
+  border-color: var(--red);
+  background: var(--red);
 }
 
 .item-number {
@@ -394,7 +437,8 @@ button {
 }
 
 .inspector-panel {
-  border: 1px solid #d7cbb7;
+  border: 1px solid rgba(239, 68, 68, 0.32);
+  border-top: 4px solid var(--red);
   border-radius: 8px;
   padding: 16px;
   background: #fffdf8;
@@ -411,7 +455,7 @@ button {
   border-radius: 50%;
   background:
     radial-gradient(circle at center, #fffdf8 0 57%, transparent 58%),
-    conic-gradient(#b30b16 var(--value), #e6ddcf 0);
+    conic-gradient(var(--red) var(--value), #e6ddcf 0);
 }
 
 .ring span {
@@ -442,7 +486,7 @@ button {
   gap: 8px;
   align-items: center;
   margin-bottom: 12px;
-  color: #b30b16;
+  color: var(--red);
 }
 
 .missed-list {
@@ -472,13 +516,13 @@ button {
   place-items: center;
   border-radius: 999px;
   background: #f1e7d7;
-  color: #8a0b14;
+  color: var(--red-dark);
   font-size: 12px;
   font-weight: 950;
 }
 
 .empty {
-  color: #14635c;
+  color: var(--red-dark);
 }
 
 .export-action {
@@ -524,7 +568,9 @@ button {
   }
 
   .brand,
-  .control-wide {
+  .control-wide,
+  .role-grid,
+  .role-empty {
     grid-column: 1 / -1;
   }
 
@@ -553,21 +599,11 @@ button {
   }
 
   .page-hero {
-    display: grid;
     padding: 20px;
   }
 
-  .hero-score {
-    min-width: 0;
-    justify-content: start;
-    place-items: start;
-    border-left: 0;
-    border-top: 1px solid #e5dccc;
-    padding-top: 14px;
-  }
-
   .meta-strip {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 
   .check-row {
@@ -576,6 +612,10 @@ button {
   }
 
   .inspector {
+    grid-template-columns: 1fr;
+  }
+
+  .role-grid {
     grid-template-columns: 1fr;
   }
 }

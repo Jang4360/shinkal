@@ -15,7 +15,7 @@ import {
 import './styles.css';
 
 const TTL_MS = 60 * 60 * 1000;
-const STORAGE_KEY = 'shinkal-checklist-cache-v2';
+const STORAGE_KEY = 'shinkal-checklist-cache-v3';
 
 const checklistPages = [
   {
@@ -24,6 +24,7 @@ const checklistPages = [
     title: '매장 오픈 [홀]',
     subtitle: '홀 운영에 필요한 준비 사항을 순서대로 점검합니다.',
     roleHint: '홀 메인 / 홀 서브 / 홀 서서브',
+    roles: ['홀 메인', '홀 서브', '홀 서서브'],
     sections: [
       section('외부/전원', [
         '에어컨팬, 배너 및 외부 청결 상태 확인',
@@ -61,6 +62,7 @@ const checklistPages = [
     title: '매장 오픈 [주방 서브]',
     subtitle: '주방 서브 포지션 오픈 준비를 점검합니다.',
     roleHint: '주방 서브 / 주방 서서브',
+    roles: ['주방 서브', '주방 서서브'],
     sections: [
       section('식자재/밥', [
         '식자재 정리 상태 확인 후 다 함께 진행',
@@ -91,6 +93,7 @@ const checklistPages = [
     title: '매장 오픈 [주방 메인]',
     subtitle: '주방 메인 포지션의 오픈 준비를 점검합니다.',
     roleHint: '주방 메인',
+    roles: ['주방 메인'],
     sections: [
       section('반죽/세척', [
         '반죽 상태 확인 후 선입선출 진행',
@@ -118,6 +121,7 @@ const checklistPages = [
     title: '매장 운영 [홀 - 메인]',
     subtitle: '홀 메인 담당자의 운영 중 역할을 점검합니다.',
     roleHint: '홀 메인',
+    roles: [],
     sections: [
       section('기본 업무', [
         '모니터 확인 후 주방 서브와 소통',
@@ -143,6 +147,7 @@ const checklistPages = [
     title: '매장 운영 [홀 - 서브]',
     subtitle: '홀 서브 담당자의 응대와 정리 흐름을 점검합니다.',
     roleHint: '홀 서브',
+    roles: [],
     sections: [
       section('고객 맞이', ['“어서오세요 현풍닭칼국수입니다.” 인사 멘트를 큰 목소리와 미소로 선창']),
       section('주문/서비스', ['정중하게 자리 안내 후 물 제공', '고객의 주문 확인을 한 번 더 확인']),
@@ -157,6 +162,7 @@ const checklistPages = [
     title: '매장 운영 [홀 - 서서브]',
     subtitle: '홀 서서브 담당자의 서빙과 정리 역할을 점검합니다.',
     roleHint: '홀 서서브',
+    roles: [],
     sections: [
       section('고객 맞이/서빙', ['서브가 인사멘트 선창할 시 큰 목소리로 후창', '서빙 시 자리로 이동 후 “식사 나왔습니다” 진행', '어른, 아이 순으로 메인, 사이드, 반찬 순서를 지켜 서빙', '서빙 마무리 시 “맛있게 드세요” 진행']),
       section('마무리/정리', ['소스통 원위치 후 다음 단계 진행', '물과 빌지를 카트에 싣고 다음 단계 진행', '잔반 처리 시 메인 그릇에 8부 이상 담지 않기', '같은 크기의 그릇끼리 모아 설거지대 이동']),
@@ -169,6 +175,7 @@ const checklistPages = [
     title: '매장 운영 [주방 메인]',
     subtitle: '주방 메인의 면 삶기, 육수, 피크 운영을 점검합니다.',
     roleHint: '주방 메인',
+    roles: [],
     sections: [
       section('기본 운영', ['고객 입점 시 모니터 확인 후 1, 2, 3번 술 불 확인', '바깥불 강불, 안불 약불로 진행', '베이스 상태에 따라 밀가루 양 조절', '제면 시 면의 1/3 기준에 맞춰 넣기']),
       section('면 삶기/컷팅', ['뭉친 면 없이 면 젓기 매뉴얼 준수', '면이 끓고 전체적으로 저은 뒤 3분 30초 타이머 진행', '면 컷팅 전 면 익힘 상태 확인', '면 컷팅 속도 및 정량 확인']),
@@ -181,6 +188,7 @@ const checklistPages = [
     title: '매장 운영 [주방 서브]',
     subtitle: '주방 서브의 모니터 소통과 사이드 매뉴얼 준수를 점검합니다.',
     roleHint: '주방 서브',
+    roles: [],
     sections: [
       section('기본 운영', ['가장 먼저 모니터 확인 후 홀 메인과 소통', '칼국수 4종류를 하나로 보아 수량과 테이블 번호 소통', '사이드 메뉴는 면 컷팅 1분 전 빼주기']),
       section('사이드 메뉴', ['사이드 만두 매뉴얼 준수', '사이드 곰탕 매뉴얼 준수', '사이드 삼계 매뉴얼 준수', '사이드 수육 매뉴얼 준수']),
@@ -193,6 +201,7 @@ const checklistPages = [
     title: '매장 운영 [주방 서서브]',
     subtitle: '주방 서서브의 소통, 사이드, 정리 지원을 점검합니다.',
     roleHint: '주방 서서브',
+    roles: [],
     sections: [
       section('기본 운영', ['들어온 메뉴를 주방 서브와 소통', '김치말이 메뉴 소면 인분 기준 확인', '면 투하 후 칼국수와 동일하게 저어 4분 타이머 설정']),
       section('서브 운영', ['지원 후 다시 재역할 수행 자리로 복귀', '사이드 메뉴는 서브와 소통하여 면 컷팅 1분 전 빼주기', '사이드 만두 매뉴얼 준수']),
@@ -205,6 +214,7 @@ const checklistPages = [
     title: '매장 마감 [홀]',
     subtitle: '홀 운영 마감에 필요한 사항을 순서대로 점검합니다.',
     roleHint: '홀 메인 / 홀 서브 / 홀 서서브',
+    roles: ['홀 메인', '홀 서브', '홀 서서브'],
     sections: [
       section('테이블/비품', ['19시 30분 수저 닦기 매뉴얼 준수', '쇼케이스 램프 OFF 및 음료, 주류 채우기', '셀프바 성에 제거 후 얼룩 없이 닦기', '그릇 기물 셀프바부터 홀 점오바 순으로 채우기', '마지막 상 치울 시 홀 기물을 설거지대에 이동']),
       section('청소/랩핑', ['화장실 청소', '홀 쓰레기통 분리수거 후 봉투 교체', '카트 마무리 및 쟁반 말려놓기', '식자재 랩핑 십자로 진행', '반찬 마감 후 랩핑하여 냉장고 보관']),
@@ -218,6 +228,7 @@ const checklistPages = [
     title: '매장 마감 [주방 메인]',
     subtitle: '주방 메인의 마감 청소와 최종 점검을 확인합니다.',
     roleHint: '주방 메인',
+    roles: ['주방 메인'],
     sections: [
       section('화구/세척', ['메인 화구 선반과 배식대를 위에서 아래로 닦기', '그을린 부분 없이 술 세척 진행', '술 교체 시 잔면을 걸러 시간 간격으로 진행', '20시 이후 소금에 절인 배추 위아래 뒤집기']),
       section('반죽/보관', ['튀김은 배추에 타공 바구니 얹어두기', '남은 반죽의 밀가루를 털어 뭉친 후 밀어두기', '반죽 밀봉 후 냉장 보관 시 위아래 위치 변경', '7번 단계 진행 후 반죽 넣어두기']),
@@ -230,6 +241,7 @@ const checklistPages = [
     title: '매장 마감 [주방 서브]',
     subtitle: '주방 서브 마감 청소와 익일 준비 상태를 점검합니다.',
     roleHint: '주방 서브 / 주방 서서브',
+    roles: ['주방 서브', '주방 서서브'],
     sections: [
       section('선반/랩핑', ['주방 선반 닦을 시 식재료 바트 뚜껑 교체와 함께 위에서 아래로 닦기', '야채와 닭육수 랩핑을 십자로 진행하고 상태 확인', '행주 세척 및 삶을 시 이물질 제거 후 진행']),
       section('만두/찜기', ['당일 남은 만두를 익일 사용할 밀폐용기에 해동 준비', '약재물과 삼계 바트를 옆으로 빼두기', '중탕기와 만두찜기 세척 시 기름기 없이 세척']),
@@ -286,7 +298,7 @@ function writeCache(next) {
 }
 
 function pageState(cache, pageId) {
-  return cache.pages[pageId] || { position: '', checks: {} };
+  return cache.pages[pageId] || { positionNames: {}, checks: {} };
 }
 
 function checkedCount(state) {
@@ -312,8 +324,6 @@ function App() {
     [selectedId],
   );
   const selectedState = pageState(cache, selectedId);
-  const selectedTotal = getItems(selectedPage).length;
-  const selectedScore = checkedCount(selectedState);
 
   useEffect(() => {
     writeCache(cache);
@@ -390,8 +400,6 @@ function App() {
         cache={cache}
         page={selectedPage}
         state={selectedState}
-        score={selectedScore}
-        total={selectedTotal}
         selectedId={selectedId}
         setSelectedId={setSelectedId}
         updateGlobal={updateGlobal}
@@ -440,8 +448,6 @@ function TopBar({
   cache,
   page,
   state,
-  score,
-  total,
   selectedId,
   setSelectedId,
   updateGlobal,
@@ -469,11 +475,8 @@ function TopBar({
         </select>
       </label>
 
-      <LabeledInput
-        icon={<CalendarDays size={17} />}
-        label="날짜"
+      <DatePickerButton
         value={cache.global.date}
-        placeholder="2026-06-22"
         onChange={(value) => updateGlobal('date', value)}
       />
       <LabeledInput
@@ -483,24 +486,77 @@ function TopBar({
         placeholder="이름"
         onChange={(value) => updateGlobal('manager', value)}
       />
-      <LabeledInput
-        icon={<ListChecks size={17} />}
-        label="담당포지션"
-        value={state.position || ''}
-        placeholder={page.roleHint}
-        onChange={(value) => updatePage(page.id, (current) => ({ ...current, position: value }))}
-      />
-
-      <div className="score-pill">
-        <span>{score}</span>
-        <small>/ {total}</small>
-      </div>
 
       <button type="button" className="icon-button danger" onClick={resetCurrentPage}>
         <RotateCcw size={18} />
         <span>초기화</span>
       </button>
+
+      <RoleInputs
+        page={page}
+        state={state}
+        updatePage={updatePage}
+      />
     </header>
+  );
+}
+
+function DatePickerButton({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="control date-control">
+      <span>날짜</span>
+      <button type="button" className="date-button" onClick={() => setOpen((current) => !current)}>
+        <CalendarDays size={18} />
+        <strong>{value || '날짜 선택'}</strong>
+      </button>
+      {open && (
+        <div className="date-popover">
+          <input
+            type="date"
+            value={value}
+            autoFocus
+            onChange={(event) => {
+              onChange(event.target.value);
+              setOpen(false);
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RoleInputs({ page, state, updatePage }) {
+  if (!page.roles?.length) {
+    return (
+      <div className="role-empty">
+        <ListChecks size={17} />
+        <span>이 체크리스트는 별도 담당포지션 입력이 없습니다.</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="role-grid">
+      {page.roles.map((role) => (
+        <label className="role-field" key={role}>
+          <span>{role}</span>
+          <input
+            value={state.positionNames?.[role] || ''}
+            placeholder={`${role} 이름`}
+            onChange={(event) => updatePage(page.id, (current) => ({
+              ...current,
+              positionNames: {
+                ...(current.positionNames || {}),
+                [role]: event.target.value,
+              },
+            }))}
+          />
+        </label>
+      ))}
+    </div>
   );
 }
 
@@ -526,21 +582,13 @@ function ChecklistView({ page, data, global, onToggle, exportMode = false }) {
           <h1>{page.title}</h1>
           <p>{page.subtitle}</p>
         </div>
-        <div className="hero-score">
-          <strong>{score}</strong>
-          <span>/ {total}점</span>
-        </div>
       </div>
 
       <div className="meta-strip">
         <Meta label="날짜" value={global.date || '-'} />
         <Meta label="담당자" value={global.manager || '-'} />
-        <Meta label="담당포지션" value={data.position || '-'} />
+        <Meta label="담당포지션" value={formatRoles(page, data)} />
         <Meta label="상태" value={scoreLabel(score, total)} />
-      </div>
-
-      <div className="progress-track">
-        <span style={{ width: `${total ? (score / total) * 100 : 0}%` }} />
       </div>
 
       <div className="sections">
@@ -591,6 +639,13 @@ function Meta({ label, value }) {
       <strong>{value}</strong>
     </div>
   );
+}
+
+function formatRoles(page, data) {
+  if (!page.roles?.length) return '해당 없음';
+  return page.roles
+    .map((role) => `${role}: ${data.positionNames?.[role] || '-'}`)
+    .join(' · ');
 }
 
 function Inspector({ page, data, global, onExport, exporting }) {

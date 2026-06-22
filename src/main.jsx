@@ -2,151 +2,255 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import {
+  AlertCircle,
+  CalendarDays,
+  Check,
+  ClipboardCheck,
+  Download,
+  ListChecks,
+  RotateCcw,
+  UserRound,
+} from 'lucide-react';
 import './styles.css';
 
 const TTL_MS = 60 * 60 * 1000;
-const STORAGE_KEY = 'shinkal-checklist-cache-v1';
+const STORAGE_KEY = 'shinkal-checklist-cache-v2';
 
-const pages = [
+const checklistPages = [
   {
     id: 1,
+    phase: '오픈',
     title: '매장 오픈 [홀]',
-    image: '/checklists/page-01.png',
-    cleanPositionArea: true,
-    checks: [
-      [0.2337, 0.4724], [0.469, 0.4724], [0.7116, 0.4724], [0.953, 0.4724],
-      [0.2337, 0.5348], [0.4688, 0.5348], [0.7116, 0.5348], [0.953, 0.5348],
-      [0.2337, 0.6016], [0.4692, 0.6012], [0.7116, 0.6016], [0.953, 0.6016],
-      [0.2337, 0.6749], [0.4688, 0.6749], [0.7116, 0.6749], [0.953, 0.6749],
-      [0.2337, 0.7522], [0.469, 0.7522], [0.7116, 0.7522], [0.953, 0.7522],
+    subtitle: '홀 운영에 필요한 준비 사항을 순서대로 점검합니다.',
+    roleHint: '홀 메인 / 홀 서브 / 홀 서서브',
+    sections: [
+      section('외부/전원', [
+        '에어컨팬, 배너 및 외부 청결 상태 확인',
+        '포스기 전원 순번대로 ON 및 정상작동 확인',
+        'TV 켜고 매장 음악 위주로 재생 확인',
+        '태블릿 사용 준비 확인',
+        '화장실 상태 및 비품 확인',
+      ]),
+      section('청소/카트', [
+        '바닥 청소',
+        '행주 세척 후 빠르게 짜기',
+        '행주 용도 구분 및 테이블, 소스통, 쟁반 마무리',
+        '소독 분무기와 행주 2개를 1세트로 카트 세팅',
+        '수족관 램프 ON 여부',
+      ]),
+      section('냉장/김치', [
+        '쇼케이스 램프 ON 여부',
+        '냉장고, 보온고 전원 ON 여부',
+        '매운 김치와 안매운 김치가 섞이지 않게 적정량 세팅',
+        '배달 김치 적정량 세팅',
+        '장류를 이물질 없이 적정량 세팅',
+      ]),
+      section('비품/외관', [
+        '고추 세팅',
+        '단무지 세팅',
+        '김가루와 닭가슴살 세팅',
+        '배달 비품 종류별 여유분까지 확인 및 세팅',
+        '유리 및 매장 외관상 체크 후 닦기',
+      ]),
     ],
   },
   {
     id: 2,
+    phase: '오픈',
     title: '매장 오픈 [주방 서브]',
-    image: '/checklists/page-02.png',
-    cleanPositionArea: true,
-    checks: [
-      [0.3024, 0.43], [0.6133, 0.4289], [0.9465, 0.4289],
-      [0.3024, 0.5137], [0.6133, 0.5332], [0.9465, 0.5119],
-      [0.3024, 0.6061], [0.6133, 0.6051], [0.9465, 0.5935],
-      [0.3024, 0.6863], [0.6133, 0.6827], [0.9465, 0.6783],
-      [0.3024, 0.7643], [0.6133, 0.7617], [0.9465, 0.761],
+    subtitle: '주방 서브 포지션 오픈 준비를 점검합니다.',
+    roleHint: '주방 서브 / 주방 서서브',
+    sections: [
+      section('식자재/밥', [
+        '식자재 정리 상태 확인 후 다 함께 진행',
+        '밥 짓기 비율과 방향 매뉴얼 준수',
+        '중탕기 및 만두 찜기 물 채움 후 120도 10분 타이머 진행',
+        '삼계 바트 1/2 미리 세팅',
+        '약재물 끓이기 전 대추와 여유바트 확인',
+      ]),
+      section('삼계/사이드', [
+        '삼계 작업 시간 기준 준수',
+        '만두 시스댐 세팅 수량 확인',
+        '쥬키니, 대파 등 야채 선입선출 진행',
+        '곰탕 삼계 재료 준비',
+        '하계 운영 시 김치말이 재료 선입선출 준비',
+      ]),
+      section('마무리 세팅', [
+        '얼큰 가루 여유바트까지 세팅',
+        '삼계와 곰탕 약재물이 넘치지 않게 세팅',
+        '15족 이상 삼계는 채반 이용해 세팅',
+        '수육 작업 시 기준 중량 준수',
+        '배달 밥 15개 이상 먼저 담고 홀 밥 세팅',
+      ]),
     ],
   },
   {
     id: 3,
-    title: '3페이지 체크리스트',
-    image: '/checklists/page-03.png',
-    checks: [
-      [0.3022, 0.43], [0.6132, 0.4296], [0.9474, 0.43],
-      [0.3025, 0.5209], [0.6132, 0.5372], [0.9476, 0.5177],
-      [0.3025, 0.6224], [0.6137, 0.6523], [0.9476, 0.6495],
-      [0.3025, 0.7321], [0.6134, 0.7646], [0.9476, 0.7343],
+    phase: '오픈',
+    title: '매장 오픈 [주방 메인]',
+    subtitle: '주방 메인 포지션의 오픈 준비를 점검합니다.',
+    roleHint: '주방 메인',
+    sections: [
+      section('반죽/세척', [
+        '반죽 상태 확인 후 선입선출 진행',
+        '배추 헹굼 시 돌려가며 2회 진행 후 10분 타이머 설정',
+        '세척기 물 원위치 및 매장 운영 가능하도록 물 채움',
+        '계절메뉴 육수 세팅 시 육수 상태와 세팅값 확인',
+      ]),
+      section('육수/김치', [
+        '4번 육수 농도 확인 후 기준에 맞게 조절',
+        '화구 불 확인 후 바깥불 강불, 안불 약불로 조절',
+        '김치 1차 버무림 시 고춧가루가 뭉치지 않게 진행',
+        '반죽 상태 확인 후 한 판 얇게 밀어 봉함',
+      ]),
+      section('버무림/보관', [
+        '김치 2차 버무림 시 5분 이상 양념이 뭉치지 않게 진행',
+        '오픈간 홀에서 사용할 김치를 제외하고 작업 김치 보관',
+        '당일 사용할 닭 육수 분말과 후추 세팅',
+        '나머지 반죽을 계절 기준에 맞게 밀어 봉함',
+      ]),
     ],
   },
   {
     id: 4,
-    title: '4페이지 체크리스트',
-    image: '/checklists/page-04.png',
-    checks: [
-      [0.4666, 0.3666], [0.9559, 0.3604],
-      [0.4666, 0.4676], [0.9559, 0.4351],
-      [0.4666, 0.5554], [0.9559, 0.6181],
-      [0.4666, 0.6593], [0.9559, 0.6939],
-      [0.4666, 0.7587], [0.9559, 0.769],
+    phase: '운영',
+    title: '매장 운영 [홀 - 메인]',
+    subtitle: '홀 메인 담당자의 운영 중 역할을 점검합니다.',
+    roleHint: '홀 메인',
+    sections: [
+      section('기본 업무', [
+        '모니터 확인 후 주방 서브와 소통',
+        '주메뉴와 배차 여부를 주방 서브와 소통',
+        '반찬 세팅을 김치, 단무지, 고추, 장류, 앞접시, 공기밥 순으로 진행',
+        '주방 서브와 소통하여 메인 메뉴 1분 전 사이드 먼저 준비',
+        '메인 메뉴 챙길 시 닭칼국수 토핑을 일자로 진행',
+      ]),
+      section('배달 업무', [
+        '배달 들어왔을 시 빌지 부착 후 리뷰, 음료 등 특이사항 확인',
+        '맨 아래 빌지부터 폴더에 끼운 뒤 좌측부터 차례로 세팅',
+      ]),
+      section('서빙 업무', [
+        '서빙 시 자리로 이동 후 “식사 나왔습니다” 멘트와 미소 진행',
+        '어른, 아이 순으로 메인, 사이드, 반찬 순서를 지켜 서빙',
+        '서빙 마무리 시 안매운 김치 멘트와 “맛있게 드세요” 진행',
+      ]),
     ],
   },
   {
     id: 5,
+    phase: '운영',
     title: '매장 운영 [홀 - 서브]',
-    image: '/checklists/page-05.png',
-    checks: [
-      [0.4614, 0.3585], [0.9527, 0.3585],
-      [0.4614, 0.4953], [0.9527, 0.426],
-      [0.4614, 0.5537], [0.9527, 0.4985],
-      [0.4614, 0.7148], [0.9527, 0.5704],
-      [0.4614, 0.7765], [0.9527, 0.7362],
+    subtitle: '홀 서브 담당자의 응대와 정리 흐름을 점검합니다.',
+    roleHint: '홀 서브',
+    sections: [
+      section('고객 맞이', ['“어서오세요 현풍닭칼국수입니다.” 인사 멘트를 큰 목소리와 미소로 선창']),
+      section('주문/서비스', ['정중하게 자리 안내 후 물 제공', '고객의 주문 확인을 한 번 더 확인']),
+      section('반찬 리필', ['반찬 리필에 필요한 반찬과 집기를 먼저 챙긴 뒤 이동', '반찬 리필 의사를 물어본 뒤 소량 리필 진행']),
+      section('마무리/정리', ['소스통 원위치 후 다음 단계 진행', '물과 빌지를 카트에 싣고 다음 단계 진행', '잔반 처리 시 메인 그릇에 8부 이상 담지 않기', '같은 크기의 그릇끼리 모아 설거지대 이동']),
+      section('포스기', ['포스기 운영 능력이 양호한지 확인']),
     ],
   },
   {
     id: 6,
+    phase: '운영',
     title: '매장 운영 [홀 - 서서브]',
-    image: '/checklists/page-06.png',
-    checks: [
-      [0.3149, 0.3783], [0.6411, 0.3783], [0.9606, 0.3783],
-      [0.3149, 0.47], [0.6411, 0.4747], [0.9606, 0.4827],
-      [0.3149, 0.5884], [0.6411, 0.5639], [0.9606, 0.607],
-      [0.3149, 0.7105],
+    subtitle: '홀 서서브 담당자의 서빙과 정리 역할을 점검합니다.',
+    roleHint: '홀 서서브',
+    sections: [
+      section('고객 맞이/서빙', ['서브가 인사멘트 선창할 시 큰 목소리로 후창', '서빙 시 자리로 이동 후 “식사 나왔습니다” 진행', '어른, 아이 순으로 메인, 사이드, 반찬 순서를 지켜 서빙', '서빙 마무리 시 “맛있게 드세요” 진행']),
+      section('마무리/정리', ['소스통 원위치 후 다음 단계 진행', '물과 빌지를 카트에 싣고 다음 단계 진행', '잔반 처리 시 메인 그릇에 8부 이상 담지 않기', '같은 크기의 그릇끼리 모아 설거지대 이동']),
+      section('반찬 리필', ['반찬 리필에 필요한 반찬과 집기를 먼저 챙긴 뒤 이동', '반찬 리필 의사를 물어본 뒤 소량 리필 진행']),
     ],
   },
   {
     id: 7,
-    title: '7페이지 체크리스트',
-    image: '/checklists/page-07.png',
-    checks: [
-      [0.314, 0.3755], [0.6301, 0.3755], [0.952, 0.3762],
-      [0.314, 0.478], [0.6301, 0.4773], [0.952, 0.4773],
-      [0.314, 0.5827], [0.6301, 0.6181], [0.952, 0.6451],
-      [0.314, 0.7415], [0.6301, 0.7549], [0.952, 0.7336],
+    phase: '운영',
+    title: '매장 운영 [주방 메인]',
+    subtitle: '주방 메인의 면 삶기, 육수, 피크 운영을 점검합니다.',
+    roleHint: '주방 메인',
+    sections: [
+      section('기본 운영', ['고객 입점 시 모니터 확인 후 1, 2, 3번 술 불 확인', '바깥불 강불, 안불 약불로 진행', '베이스 상태에 따라 밀가루 양 조절', '제면 시 면의 1/3 기준에 맞춰 넣기']),
+      section('면 삶기/컷팅', ['뭉친 면 없이 면 젓기 매뉴얼 준수', '면이 끓고 전체적으로 저은 뒤 3분 30초 타이머 진행', '면 컷팅 전 면 익힘 상태 확인', '면 컷팅 속도 및 정량 확인']),
+      section('육수/기타', ['8인분 면 컷팅 전 2, 3번 술 육수 희석 진행', '1번 술 육수 희석 운영 시 매뉴얼 유지', '배달 면 20초 남았을 시 컷팅 진행', '피크타임 기준 반죽을 미리 꺼내 운영']),
     ],
   },
   {
     id: 8,
-    title: '8페이지 체크리스트',
-    image: '/checklists/page-08.png',
-    checks: [
-      [0.3108, 0.4075], [0.6285, 0.4075], [0.9525, 0.4075],
-      [0.3108, 0.5306], [0.6285, 0.532], [0.9525, 0.5317],
-      [0.3108, 0.7311], [0.6285, 0.6551], [0.9525, 0.6994],
-      [0.6288, 0.7718],
+    phase: '운영',
+    title: '매장 운영 [주방 서브]',
+    subtitle: '주방 서브의 모니터 소통과 사이드 매뉴얼 준수를 점검합니다.',
+    roleHint: '주방 서브',
+    sections: [
+      section('기본 운영', ['가장 먼저 모니터 확인 후 홀 메인과 소통', '칼국수 4종류를 하나로 보아 수량과 테이블 번호 소통', '사이드 메뉴는 면 컷팅 1분 전 빼주기']),
+      section('사이드 메뉴', ['사이드 만두 매뉴얼 준수', '사이드 곰탕 매뉴얼 준수', '사이드 삼계 매뉴얼 준수', '사이드 수육 매뉴얼 준수']),
+      section('지원 업무', ['여유바트 교체 시 항상 새 바트로 교체', '메뉴 빼주기 전 1번 육수 확인 후 채움', '1번 육수 채운 뒤 모니터 확인 및 설거지 지원']),
     ],
   },
   {
     id: 9,
-    title: '9페이지 체크리스트',
-    image: '/checklists/page-09.png',
-    checks: [
-      [0.3117, 0.3739], [0.6289, 0.3746], [0.9523, 0.3714],
-      [0.3117, 0.5058], [0.6289, 0.5164], [0.9523, 0.4651],
-      [0.3117, 0.6595], [0.6289, 0.6566], [0.9523, 0.569],
-      [0.9523, 0.6762],
+    phase: '운영',
+    title: '매장 운영 [주방 서서브]',
+    subtitle: '주방 서서브의 소통, 사이드, 정리 지원을 점검합니다.',
+    roleHint: '주방 서서브',
+    sections: [
+      section('기본 운영', ['들어온 메뉴를 주방 서브와 소통', '김치말이 메뉴 소면 인분 기준 확인', '면 투하 후 칼국수와 동일하게 저어 4분 타이머 설정']),
+      section('서브 운영', ['지원 후 다시 재역할 수행 자리로 복귀', '사이드 메뉴는 서브와 소통하여 면 컷팅 1분 전 빼주기', '사이드 만두 매뉴얼 준수']),
+      section('사이드/정리', ['사이드 곰탕 매뉴얼 준수', '사이드 삼계 매뉴얼 준수', '여유바트 교체 시 항상 새 바트로 교체', '설거지 시 큰 그릇은 아래에 정리하고 같은 크기끼리 모으기']),
     ],
   },
   {
     id: 10,
-    title: '10페이지 체크리스트',
-    image: '/checklists/page-10.png',
-    checks: [
-      [0.2343, 0.4827], [0.4684, 0.4823], [0.7117, 0.4827], [0.953, 0.4823],
-      [0.2343, 0.5549], [0.4684, 0.5552], [0.7119, 0.5552], [0.953, 0.5552],
-      [0.2343, 0.6292], [0.4684, 0.6292], [0.7117, 0.6292], [0.953, 0.6292],
-      [0.2343, 0.6982], [0.4684, 0.6982], [0.7117, 0.6982], [0.953, 0.6982],
-      [0.2343, 0.7653], [0.4684, 0.7653], [0.7117, 0.7653], [0.953, 0.7653],
+    phase: '마감',
+    title: '매장 마감 [홀]',
+    subtitle: '홀 운영 마감에 필요한 사항을 순서대로 점검합니다.',
+    roleHint: '홀 메인 / 홀 서브 / 홀 서서브',
+    sections: [
+      section('테이블/비품', ['19시 30분 수저 닦기 매뉴얼 준수', '쇼케이스 램프 OFF 및 음료, 주류 채우기', '셀프바 성에 제거 후 얼룩 없이 닦기', '그릇 기물 셀프바부터 홀 점오바 순으로 채우기', '마지막 상 치울 시 홀 기물을 설거지대에 이동']),
+      section('청소/랩핑', ['화장실 청소', '홀 쓰레기통 분리수거 후 봉투 교체', '카트 마무리 및 쟁반 말려놓기', '식자재 랩핑 십자로 진행', '반찬 마감 후 랩핑하여 냉장고 보관']),
+      section('김치/수족관', ['김치 마감 시 매운 김치와 안매운 김치가 섞이지 않게 담기', '김치 선입선출 가능하도록 라벨지 작업', '수족관 램프 OFF 여부', '김치 포장용기 씻어 엎어두기', '보온고 마감 시 전원 OFF']),
+      section('전원/외관', ['익일 사용 가능하도록 태블릿 충전', '익일 바닥 청소 가능하도록 의자 올리기', 'TV, 에어컨 또는 히터 OFF 여부', '에어간판 OFF 및 고정 여부', '포스 마감 후 노래 OFF 여부']),
     ],
   },
   {
     id: 11,
-    title: '11페이지 체크리스트',
-    image: '/checklists/page-11.png',
-    checks: [
-      [0.2375, 0.5047], [0.4705, 0.5004], [0.7134, 0.4946], [0.9538, 0.5255],
-      [0.2378, 0.5959], [0.4705, 0.5909], [0.7134, 0.6469], [0.9538, 0.6979],
-      [0.2378, 0.6756], [0.4705, 0.6756], [0.2375, 0.7554], [0.4705, 0.7579],
+    phase: '마감',
+    title: '매장 마감 [주방 메인]',
+    subtitle: '주방 메인의 마감 청소와 최종 점검을 확인합니다.',
+    roleHint: '주방 메인',
+    sections: [
+      section('화구/세척', ['메인 화구 선반과 배식대를 위에서 아래로 닦기', '그을린 부분 없이 술 세척 진행', '술 교체 시 잔면을 걸러 시간 간격으로 진행', '20시 이후 소금에 절인 배추 위아래 뒤집기']),
+      section('반죽/보관', ['튀김은 배추에 타공 바구니 얹어두기', '남은 반죽의 밀가루를 털어 뭉친 후 밀어두기', '반죽 밀봉 후 냉장 보관 시 위아래 위치 변경', '7번 단계 진행 후 반죽 넣어두기']),
+      section('전원/최종', ['베이스를 센 불로 끓인 후 불 끄고 뚜껑 덮기', '보일러와 가스 OFF 여부 확인', '시재와 포스 마감 시 현금 확인', '반죽상태, 온도, 가스, 보일러, 세척기 전원 최종 점검']),
     ],
   },
   {
     id: 12,
-    title: '12페이지 체크리스트',
-    image: '/checklists/page-12.png',
-    checks: [
-      [0.2967, 0.496], [0.6133, 0.4971], [0.9533, 0.4892],
-      [0.2967, 0.6355], [0.6133, 0.628], [0.9531, 0.5671],
-      [0.2967, 0.7603], [0.6133, 0.7516], [0.9533, 0.6528],
-      [0.9533, 0.7495],
+    phase: '마감',
+    title: '매장 마감 [주방 서브]',
+    subtitle: '주방 서브 마감 청소와 익일 준비 상태를 점검합니다.',
+    roleHint: '주방 서브 / 주방 서서브',
+    sections: [
+      section('선반/랩핑', ['주방 선반 닦을 시 식재료 바트 뚜껑 교체와 함께 위에서 아래로 닦기', '야채와 닭육수 랩핑을 십자로 진행하고 상태 확인', '행주 세척 및 삶을 시 이물질 제거 후 진행']),
+      section('만두/찜기', ['당일 남은 만두를 익일 사용할 밀폐용기에 해동 준비', '약재물과 삼계 바트를 옆으로 빼두기', '중탕기와 만두찜기 세척 시 기름기 없이 세척']),
+      section('물청소/익일 준비', ['물청소', '중탕기 2, 3, 4 순번대로 진행', '콘센트 코드에 물이 닿지 않도록 선반다리와 맨밑 선반까지 청소', '랩핑은 반드시 십자로 진행하고 익일 사용할 당면까지 불려놓기']),
     ],
   },
 ];
+
+function section(title, items) {
+  return { title, items };
+}
+
+const phaseClass = {
+  오픈: 'phase-open',
+  운영: 'phase-run',
+  마감: 'phase-close',
+};
+
+function getItems(page) {
+  return page.sections.flatMap((sectionValue) => sectionValue.items);
+}
 
 function freshCache() {
   return {
@@ -175,10 +279,10 @@ function readCache() {
 }
 
 function writeCache(next) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    ...next,
-    expiresAt: Date.now() + TTL_MS,
-  }));
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({ ...next, expiresAt: Date.now() + TTL_MS }),
+  );
 }
 
 function pageState(cache, pageId) {
@@ -189,6 +293,14 @@ function checkedCount(state) {
   return Object.values(state.checks || {}).filter(Boolean).length;
 }
 
+function scoreLabel(score, total) {
+  const ratio = total ? score / total : 0;
+  if (score === total) return '완료';
+  if (ratio >= 0.85) return '우수';
+  if (ratio >= 0.6) return '진행중';
+  return '점검 필요';
+}
+
 function App() {
   const [selectedId, setSelectedId] = useState(1);
   const [cache, setCache] = useState(readCache);
@@ -196,11 +308,12 @@ function App() {
   const exportRefs = useRef({});
 
   const selectedPage = useMemo(
-    () => pages.find((page) => page.id === selectedId) || pages[0],
+    () => checklistPages.find((page) => page.id === selectedId) || checklistPages[0],
     [selectedId],
   );
   const selectedState = pageState(cache, selectedId);
-  const score = checkedCount(selectedState);
+  const selectedTotal = getItems(selectedPage).length;
+  const selectedScore = checkedCount(selectedState);
 
   useEffect(() => {
     writeCache(cache);
@@ -244,35 +357,21 @@ function App() {
     });
   }
 
-  async function waitForImages(container) {
-    const images = Array.from(container.querySelectorAll('img'));
-    await Promise.all(images.map((img) => {
-      if (img.complete) return Promise.resolve();
-      return new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-      });
-    }));
-  }
-
   async function exportPdf() {
     setExporting(true);
     try {
       await new Promise((resolve) => requestAnimationFrame(resolve));
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1280, 860] });
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [1100, 1500] });
 
-      for (const [index, page] of pages.entries()) {
+      for (const [index, page] of checklistPages.entries()) {
         const node = exportRefs.current[page.id];
-        await waitForImages(node);
         const canvas = await html2canvas(node, {
-          backgroundColor: '#ffffff',
+          backgroundColor: '#f7f5ef',
           scale: 2,
           useCORS: true,
         });
-        const image = canvas.toDataURL('image/jpeg', 0.92);
-        if (index > 0) {
-          pdf.addPage([canvas.width, canvas.height], 'landscape');
-        }
+        const image = canvas.toDataURL('image/jpeg', 0.94);
+        if (index > 0) pdf.addPage([canvas.width, canvas.height], 'portrait');
         const width = pdf.internal.pageSize.getWidth();
         const height = pdf.internal.pageSize.getHeight();
         pdf.addImage(image, 'JPEG', 0, 0, width, height);
@@ -287,81 +386,38 @@ function App() {
 
   return (
     <main className="app">
-      <header className="toolbar">
-        <div className="field page-field">
-          <label htmlFor="page">체크리스트</label>
-          <select
-            id="page"
-            value={selectedId}
-            onChange={(event) => setSelectedId(Number(event.target.value))}
-          >
-            {pages.map((page) => (
-              <option key={page.id} value={page.id}>
-                {page.id}. {page.title} ({page.checks.length}점)
-              </option>
-            ))}
-          </select>
-        </div>
+      <TopBar
+        cache={cache}
+        page={selectedPage}
+        state={selectedState}
+        score={selectedScore}
+        total={selectedTotal}
+        selectedId={selectedId}
+        setSelectedId={setSelectedId}
+        updateGlobal={updateGlobal}
+        updatePage={updatePage}
+        resetCurrentPage={resetCurrentPage}
+      />
 
-        <div className="field">
-          <label htmlFor="date">날짜</label>
-          <input
-            id="date"
-            type="text"
-            placeholder="예: 2026-06-22"
-            value={cache.global.date}
-            onChange={(event) => updateGlobal('date', event.target.value)}
-          />
-        </div>
-
-        <div className="field">
-          <label htmlFor="manager">담당자</label>
-          <input
-            id="manager"
-            type="text"
-            placeholder="이름 입력"
-            value={cache.global.manager}
-            onChange={(event) => updateGlobal('manager', event.target.value)}
-          />
-        </div>
-
-        <div className="field">
-          <label htmlFor="position">담당포지션</label>
-          <input
-            id="position"
-            type="text"
-            placeholder="포지션 입력"
-            value={selectedState.position || ''}
-            onChange={(event) => updatePage(selectedId, (current) => ({
-              ...current,
-              position: event.target.value,
-            }))}
-          />
-        </div>
-
-        <div className="score-chip" aria-live="polite">
-          {score} / {selectedPage.checks.length}
-        </div>
-
-        <button className="reset-button" type="button" onClick={resetCurrentPage}>
-          초기화
-        </button>
-      </header>
-
-      <section className="sheet-scroll" aria-label="체크리스트 작성 영역">
-        <ChecklistSheet
+      <div className="workspace">
+        <ChecklistView
           page={selectedPage}
           data={selectedState}
           global={cache.global}
-          score={score}
           onToggle={toggleCheck}
+        />
+
+        <Inspector
+          page={selectedPage}
+          data={selectedState}
+          global={cache.global}
           onExport={exportPdf}
           exporting={exporting}
         />
-      </section>
+      </div>
 
       <div className="export-stage" aria-hidden="true">
-        {pages.map((page) => {
+        {checklistPages.map((page) => {
           const data = pageState(cache, page.id);
           return (
             <div
@@ -371,14 +427,7 @@ function App() {
                 if (node) exportRefs.current[page.id] = node;
               }}
             >
-              <ExportHeader page={page} data={data} global={cache.global} />
-              <ChecklistSheet
-                page={page}
-                data={data}
-                global={cache.global}
-                score={checkedCount(data)}
-                exportMode
-              />
+              <ChecklistView page={page} data={data} global={cache.global} exportMode />
             </div>
           );
         })}
@@ -387,82 +436,202 @@ function App() {
   );
 }
 
-function ExportHeader({ page, data, global }) {
+function TopBar({
+  cache,
+  page,
+  state,
+  score,
+  total,
+  selectedId,
+  setSelectedId,
+  updateGlobal,
+  updatePage,
+  resetCurrentPage,
+}) {
   return (
-    <div className="export-header">
-      <strong>{page.id}. {page.title}</strong>
-      <span>날짜: {global.date || '-'}</span>
-      <span>담당자: {global.manager || '-'}</span>
-      <span>담당포지션: {data.position || '-'}</span>
-      <span>총점: {checkedCount(data)} / {page.checks.length}</span>
+    <header className="topbar">
+      <div className="brand">
+        <span className="brand-mark"><ClipboardCheck size={22} /></span>
+        <div>
+          <p>SHIN KAL</p>
+          <strong>운영 체크리스트</strong>
+        </div>
+      </div>
+
+      <label className="control control-wide">
+        <span>체크리스트</span>
+        <select value={selectedId} onChange={(event) => setSelectedId(Number(event.target.value))}>
+          {checklistPages.map((pageOption) => (
+            <option key={pageOption.id} value={pageOption.id}>
+              {pageOption.id}. {pageOption.title}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <LabeledInput
+        icon={<CalendarDays size={17} />}
+        label="날짜"
+        value={cache.global.date}
+        placeholder="2026-06-22"
+        onChange={(value) => updateGlobal('date', value)}
+      />
+      <LabeledInput
+        icon={<UserRound size={17} />}
+        label="담당자"
+        value={cache.global.manager}
+        placeholder="이름"
+        onChange={(value) => updateGlobal('manager', value)}
+      />
+      <LabeledInput
+        icon={<ListChecks size={17} />}
+        label="담당포지션"
+        value={state.position || ''}
+        placeholder={page.roleHint}
+        onChange={(value) => updatePage(page.id, (current) => ({ ...current, position: value }))}
+      />
+
+      <div className="score-pill">
+        <span>{score}</span>
+        <small>/ {total}</small>
+      </div>
+
+      <button type="button" className="icon-button danger" onClick={resetCurrentPage}>
+        <RotateCcw size={18} />
+        <span>초기화</span>
+      </button>
+    </header>
+  );
+}
+
+function LabeledInput({ icon, label, value, placeholder, onChange }) {
+  return (
+    <label className="control">
+      <span>{icon}{label}</span>
+      <input value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+    </label>
+  );
+}
+
+function ChecklistView({ page, data, global, onToggle, exportMode = false }) {
+  const total = getItems(page).length;
+  const score = checkedCount(data);
+  let offset = 0;
+
+  return (
+    <section className={`checklist ${exportMode ? 'export-mode' : ''}`}>
+      <div className="page-hero">
+        <div>
+          <span className={`phase ${phaseClass[page.phase]}`}>{page.phase}</span>
+          <h1>{page.title}</h1>
+          <p>{page.subtitle}</p>
+        </div>
+        <div className="hero-score">
+          <strong>{score}</strong>
+          <span>/ {total}점</span>
+        </div>
+      </div>
+
+      <div className="meta-strip">
+        <Meta label="날짜" value={global.date || '-'} />
+        <Meta label="담당자" value={global.manager || '-'} />
+        <Meta label="담당포지션" value={data.position || '-'} />
+        <Meta label="상태" value={scoreLabel(score, total)} />
+      </div>
+
+      <div className="progress-track">
+        <span style={{ width: `${total ? (score / total) * 100 : 0}%` }} />
+      </div>
+
+      <div className="sections">
+        {page.sections.map((sectionValue) => {
+          const base = offset;
+          offset += sectionValue.items.length;
+          const sectionScore = sectionValue.items.reduce(
+            (sum, _item, index) => sum + (data.checks?.[base + index] ? 1 : 0),
+            0,
+          );
+
+          return (
+            <section className="section-block" key={sectionValue.title}>
+              <div className="section-head">
+                <h2>{sectionValue.title}</h2>
+                <span>{sectionScore} / {sectionValue.items.length}</span>
+              </div>
+              <div className="item-list">
+                {sectionValue.items.map((item, index) => {
+                  const itemIndex = base + index;
+                  const checked = Boolean(data.checks?.[itemIndex]);
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      className={`check-row ${checked ? 'is-checked' : ''}`}
+                      onClick={() => !exportMode && onToggle?.(itemIndex)}
+                    >
+                      <span className="check-box">{checked && <Check size={18} strokeWidth={3} />}</span>
+                      <span className="item-number">{itemIndex + 1}</span>
+                      <span className="item-text">{item}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function Meta({ label, value }) {
+  return (
+    <div className="meta">
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
 
-function ChecklistSheet({
-  page,
-  data,
-  global,
-  score,
-  onToggle,
-  onExport,
-  exporting = false,
-  exportMode = false,
-}) {
+function Inspector({ page, data, global, onExport, exporting }) {
+  const items = getItems(page);
+  const score = checkedCount(data);
+  const missed = items
+    .map((item, index) => ({ item, index }))
+    .filter(({ index }) => !data.checks?.[index]);
+
   return (
-    <div className={`sheet ${exportMode ? 'sheet-export' : ''}`}>
-      <img className="sheet-image" src={page.image} alt={`${page.title} 원본`} draggable="false" />
-
-      <div className="meta-cover date-cover">
-        <span>{global.date}</span>
-      </div>
-      <div className="meta-cover manager-cover">
-        <span>{global.manager}</span>
-      </div>
-      <div className="meta-cover score-cover">
-        <span>{score}</span>
-        <span>/ {page.checks.length}</span>
-      </div>
-
-      {page.cleanPositionArea && (
-        <div className="position-cover">
-          <span className="position-label">담당포지션</span>
-          <span className="position-value">{data.position || ''}</span>
+    <aside className="inspector">
+      <div className="inspector-panel">
+        <div className="ring" style={{ '--value': `${items.length ? (score / items.length) * 100 : 0}%` }}>
+          <span>{score}</span>
+          <small>{items.length}점</small>
         </div>
-      )}
+        <h2>{scoreLabel(score, items.length)}</h2>
+        <p>{global.date || '날짜 미입력'} · {global.manager || '담당자 미입력'}</p>
+      </div>
 
-      {page.checks.map(([x, y], index) => {
-        const checked = Boolean(data.checks?.[index]);
-        if (exportMode) {
-          return (
-            <span
-              key={index}
-              className={`check-toggle export-check ${checked ? 'checked' : ''}`}
-              style={{ left: `${x * 100}%`, top: `${y * 100}%` }}
-            />
-          );
-        }
-        return (
-          <button
-            key={index}
-            className={`check-toggle ${checked ? 'checked' : ''}`}
-            type="button"
-            aria-label={`${index + 1}번 항목 ${checked ? '체크 해제' : '체크'}`}
-            aria-pressed={checked}
-            style={{ left: `${x * 100}%`, top: `${y * 100}%` }}
-            onClick={() => onToggle(index)}
-          />
-        );
-      })}
-
-      <div className="bottom-total-cover">
-        {!exportMode && (
-          <button className="export-button" type="button" onClick={onExport} disabled={exporting}>
-            {exporting ? 'PDF 생성 중' : '내보내기'}
-          </button>
+      <div className="inspector-panel">
+        <div className="panel-title">
+          <AlertCircle size={18} />
+          <h2>누락 항목</h2>
+        </div>
+        {missed.length ? (
+          <ol className="missed-list">
+            {missed.slice(0, 8).map(({ item, index }) => (
+              <li key={item}><span>{index + 1}</span>{item}</li>
+            ))}
+          </ol>
+        ) : (
+          <p className="empty">현재 페이지가 모두 완료되었습니다.</p>
         )}
       </div>
-    </div>
+
+      <button type="button" className="export-action" onClick={onExport} disabled={exporting}>
+        <Download size={19} />
+        {exporting ? 'PDF 생성 중' : '전체 12페이지 내보내기'}
+      </button>
+    </aside>
   );
 }
 

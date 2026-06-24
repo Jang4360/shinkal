@@ -39,7 +39,6 @@ export const operationRecord = sqliteTable(
   },
   (table) => ({
     uniqueRun: uniqueIndex('operation_record_unique_run').on(table.branchId, table.businessDate, table.checklistId),
-    byBranchDate: index('operation_record_branch_date_idx').on(table.branchId, table.businessDate),
   }),
 );
 
@@ -123,7 +122,6 @@ export const ingredientRecord = sqliteTable(
   },
   (table) => ({
     uniqueRun: uniqueIndex('ingredient_record_unique_run').on(table.branchId, table.businessDate),
-    byBranchDate: index('ingredient_record_branch_date_idx').on(table.branchId, table.businessDate),
   }),
 );
 
@@ -180,7 +178,6 @@ export const productRecord = sqliteTable(
   },
   (table) => ({
     uniqueRun: uniqueIndex('product_record_unique_run').on(table.branchId, table.businessDate),
-    byBranchDate: index('product_record_branch_date_idx').on(table.branchId, table.businessDate),
   }),
 );
 

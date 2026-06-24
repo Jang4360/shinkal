@@ -23,6 +23,7 @@ import {
   GripVertical,
   ListChecks,
   LogOut,
+  Menu,
   Package,
   Plus,
   RotateCcw,
@@ -62,6 +63,7 @@ async function api(path, options = {}) {
 
 function App() {
   const [authed, setAuthed] = useState(localStorage.getItem('shinkal-auth') === '1');
+  const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window === 'undefined' ? true : window.innerWidth > 900));
   const [branches, setBranches] = useState([]);
   const [operationPages, setOperationPages] = useState([]);
   const [branchId, setBranchId] = useState(null);
@@ -173,12 +175,21 @@ function App() {
           : Settings;
 
   return (
-    <div className="app-shell">
-      <Sidebar view={view} operationPages={operationPages} onSelect={(nextView) => guard(() => setView(nextView))} onLogout={() => guard(logout)} />
+    <div className={sidebarOpen ? 'app-shell' : 'app-shell sidebar-collapsed'}>
+      {sidebarOpen && (
+        <Sidebar
+          view={view}
+          operationPages={operationPages}
+          onSelect={(nextView) => guard(() => setView(nextView))}
+          onLogout={() => guard(logout)}
+          onClose={() => setSidebarOpen(false)}
+        />
+      )}
       <main className="app-main">
         <Topbar
           title={currentTitle}
           Icon={CurrentTitleIcon}
+          onOpenSidebar={() => setSidebarOpen(true)}
           branches={branches}
           branchId={branchId}
           periodType={view.type === 'stats' ? 'month' : 'date'}
@@ -257,11 +268,19 @@ function Login({ onSuccess }) {
   );
 }
 
-function Sidebar({ view, operationPages, onSelect, onLogout }) {
+function Sidebar({ view, operationPages, onSelect, onLogout, onClose }) {
+  function select(nextView) {
+    onSelect(nextView);
+    if (typeof window !== 'undefined' && window.innerWidth <= 900) onClose();
+  }
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
         <div className="sidebar-logo wordmark">Shinkal</div>
+        <button type="button" className="nav-toggle sidebar-toggle" onClick={onClose} aria-label="사이드 메뉴 닫기">
+          <Menu size={22} />
+        </button>
       </div>
       <nav className="side-nav">
         <div className="side-parent"><ListChecks size={17} /> 운영 체크리스트</div>
@@ -269,21 +288,21 @@ function Sidebar({ view, operationPages, onSelect, onLogout }) {
           <button
             key={page.id}
             className={view.type === 'operation' && view.checklistId === page.id ? 'side-item nested active' : 'side-item nested'}
-            onClick={() => onSelect({ type: 'operation', checklistId: page.id })}
+            onClick={() => select({ type: 'operation', checklistId: page.id })}
           >
             {page.title}
           </button>
         ))}
-        <button className={view.type === 'ingredients' ? 'side-item active' : 'side-item'} onClick={() => onSelect({ type: 'ingredients' })}>
+        <button className={view.type === 'ingredients' ? 'side-item active' : 'side-item'} onClick={() => select({ type: 'ingredients' })}>
           <Utensils size={17} /> 식자재
         </button>
-        <button className={view.type === 'products' ? 'side-item active' : 'side-item'} onClick={() => onSelect({ type: 'products' })}>
+        <button className={view.type === 'products' ? 'side-item active' : 'side-item'} onClick={() => select({ type: 'products' })}>
           <Package size={17} /> 공산품
         </button>
-        <button className={view.type === 'stats' ? 'side-item active' : 'side-item'} onClick={() => onSelect({ type: 'stats' })}>
+        <button className={view.type === 'stats' ? 'side-item active' : 'side-item'} onClick={() => select({ type: 'stats' })}>
           <BarChart3 size={17} /> 통계
         </button>
-        <button className={view.type === 'settings' ? 'side-item active' : 'side-item'} onClick={() => onSelect({ type: 'settings' })}>
+        <button className={view.type === 'settings' ? 'side-item active' : 'side-item'} onClick={() => select({ type: 'settings' })}>
           <Settings size={17} /> 설정
         </button>
       </nav>
@@ -302,9 +321,12 @@ function openNativeDatePicker(event) {
   }
 }
 
-function Topbar({ title, Icon, branches, branchId, periodType, periodValue, onBranchChange, onPeriodChange }) {
+function Topbar({ title, Icon, onOpenSidebar, branches, branchId, periodType, periodValue, onBranchChange, onPeriodChange }) {
   return (
     <header className="context-bar">
+      <button type="button" className="nav-toggle topbar-toggle" onClick={onOpenSidebar} aria-label="사이드 메뉴 열기">
+        <Menu size={22} />
+      </button>
       <h1 className="context-title">
         {Icon && <Icon size={22} aria-hidden="true" />}
         <span>{title}</span>

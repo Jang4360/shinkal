@@ -508,6 +508,7 @@ function OperationChecklist({ checklistId, operationPages, branchId, businessDat
             </section>
           ))
         )}
+        <BottomSaveAction dirty={dirty} onSave={save} />
       </div>
       <aside className="inspector">
         <div className="score-ring" style={{ '--score': `${flatItems.length ? (totalScore / flatItems.length) * 100 : 0}%` }}>
@@ -686,6 +687,7 @@ function IngredientChecklist({ branchId, businessDate, setDirty, dirty, showToas
           </tbody>
         </table>
       </div>
+      <BottomSaveAction dirty={dirty} onSave={save} />
     </section>
   );
 }
@@ -775,6 +777,7 @@ function ProductChecklist({ branchId, businessDate, setDirty, dirty, showToast, 
           </tbody>
         </table>
       </div>
+      <BottomSaveAction dirty={dirty} onSave={save} />
     </section>
   );
 }
@@ -1476,6 +1479,14 @@ function ScreenActions({ dirty, onSave, onReset, onPdf }) {
       <button className="secondary-button" onClick={onPdf}><Download size={17} /> PDF</button>
       <button className="primary-button" disabled={!dirty} onClick={onSave}><Save size={17} /> 저장</button>
     </>
+  );
+}
+
+function BottomSaveAction({ dirty, onSave }) {
+  return (
+    <div className="bottom-save-actions">
+      <button className="primary-button" disabled={!dirty} onClick={onSave}><Save size={17} /> 저장</button>
+    </div>
   );
 }
 

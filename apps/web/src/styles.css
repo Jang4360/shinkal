@@ -333,6 +333,10 @@ button:focus-visible {
   gap: 8px;
 }
 
+.bottom-save-actions {
+  display: none;
+}
+
 .header-fields {
   display: grid;
   grid-template-columns: repeat(3, minmax(160px, 200px));
@@ -698,6 +702,7 @@ button:focus-visible {
   margin: -16px -20px -20px;
   padding: 16px 20px 24px;
   background: var(--settings-bg);
+  overflow-x: hidden;
 }
 
 .settings-screen > .tabs {
@@ -936,10 +941,14 @@ button:focus-visible {
 }
 
 .settings-card {
+  min-width: 0;
+  max-width: 100%;
   padding: 16px;
   background: var(--surface);
   border-color: var(--border);
   box-shadow: var(--shadow);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .settings-card-head {
@@ -1369,6 +1378,10 @@ button:focus-visible {
     padding: 12px;
   }
 
+  .settings-card {
+    padding: 12px;
+  }
+
   .screen-header,
   .header-fields,
   .compact-fields,
@@ -1397,6 +1410,7 @@ button:focus-visible {
   }
 
   .inline-add {
+    align-items: stretch;
     justify-content: stretch;
   }
 
@@ -1406,6 +1420,22 @@ button:focus-visible {
   .editable-row select,
   .header-fields label {
     max-width: none;
+  }
+
+  .inline-add input,
+  .inline-add select,
+  .inline-add.category-form input,
+  .inline-add.item-form input:first-of-type,
+  .inline-add.item-form input:last-of-type,
+  .inline-add.item-form select,
+  .inline-add.unit-option-form input,
+  .inline-add.unit-option-form select,
+  .inline-add.product-form input:first-child,
+  .inline-add.product-form input:last-of-type,
+  .inline-add.product-form select,
+  .inline-add-button {
+    width: 100%;
+    margin-left: 0;
   }
 
   .screen-header {
@@ -1420,7 +1450,71 @@ button:focus-visible {
     flex: 1;
   }
 
+  .bottom-save-actions {
+    display: flex;
+    justify-content: center;
+    margin: 18px 0 4px;
+  }
+
+  .bottom-save-actions .primary-button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .settings-row-category {
+    grid-template-columns: 24px minmax(0, 1fr) 74px;
+    gap: 8px;
+  }
+
+  .settings-row-category .settings-row-spacer {
+    display: none;
+  }
+
+  .settings-row-ingredient,
+  .settings-row-product {
+    min-width: 390px;
+    grid-template-columns: 24px minmax(128px, 1fr) 78px 78px 74px;
+    gap: 8px;
+  }
+
+  .settings-row-ingredient .settings-row-spacer,
+  .settings-row-product .settings-row-spacer {
+    display: none;
+  }
+
+  .settings-row-unit-option {
+    grid-template-columns: 24px minmax(0, 1fr) 74px;
+    gap: 8px;
+  }
+
+  .settings-row-unit-option .settings-row-spacer {
+    display: none;
+  }
+
+  .row-actions {
+    gap: 3px;
+  }
+
+  .row-actions button {
+    width: 34px;
+    height: 34px;
+  }
+
+  .leave-modal {
+    width: min(100%, 360px);
+    padding: 18px;
+  }
+
   .modal-actions {
-    display: grid;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  .modal-actions button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 8px;
+    font-size: 14px;
   }
 }

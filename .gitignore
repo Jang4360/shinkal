@@ -1,5 +1,11 @@
 node_modules
 dist
+apps/*/dist
 .vercel
+.wrangler
 tmp
+output
+.claude
 .DS_Store
+.env
+.env.*

@@ -1,0 +1,1 @@
+ALTER TABLE `product_line` ADD `restock_qty` real;

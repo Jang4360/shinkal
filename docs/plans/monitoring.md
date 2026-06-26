@@ -24,21 +24,22 @@
 - [x] **`@sentry/hono` + `@sentry/cloudflare` 설치** `[코드]` — Hono Cloudflare middleware로 `env.SENTRY_DSN`을 읽는다. `nodejs_compat` 확인 완료. 성공: 의도적 예외가 Sentry에 도착.
 - [x] **5xx/잡히지 않은 예외만 capture** `[코드]` — `status >= 500`만 `captureException`. **4xx 비즈니스 거부**(`VERSION_CONFLICT`·`CATALOG_CHANGED`·`VALIDATION_ERROR`·`INVALID_PASSWORD`·`DUPLICATE`)는 capture 금지. 성공: 충돌 4xx가 Sentry에 안 쌓임.
 - [x] **Sentry 태그/컨텍스트** `[코드]` — `requestId`, `domain`, `operation` 태그와 `api_error` 컨텍스트 추가. 성공: Sentry 이슈와 알림에 requestId가 보여 로그로 점프 가능.
-- [ ] **Alert Rule → Discord** `[플랫폼]` — 신규 이슈 1건 즉시 / 10분 내 동일 N건(절대 건수, 비율 아님)일 때 Discord로. 성공: 5xx 발생 시 Discord 알림(requestId 포함).
+- [ ] **Alert Rule → Discord** `[플랫폼/우선]` — 신규 이슈 1건 즉시 / 10분 내 동일 N건(절대 건수, 비율 아님)일 때 Discord로. 이 항목이 꺼져 있으면 Sentry에는 쌓이지만 사람이 모를 수 있으므로 배포 후 반드시 확인한다.
 
 ## C. 헬스 / 생존
 
 - [x] **`/health` (liveness)** `[코드]` — DB 안 건드리고 `200`만. 앱 프로세스 생존 확인용. 성공: DB 다운에도 앱이 살아있으면 200.
 - [x] **`/ready` (readiness)** `[코드]` — `SELECT 1`로 DB 확인, 실패 시 `503`. 성공: DB 끊으면 `/ready`만 503, `/health`는 200(B/C 구분).
 - [x] **UptimeRobot HTTP 모니터** `[외부]` — `/health` 5분 핑(다운 감지). 성공: 사이트 내리면 5분 내 Discord/이메일 알림.
+- [ ] **UptimeRobot readiness 모니터** `[외부/권장]` — `/ready` 5분 핑(DB 연결 감지). 성공: DB 연결 실패 시 외부 감시에서 알림.
 - [ ] **UptimeRobot heartbeat** `[외부/보류]` — Free 플랜에서는 유료 기능이라 현재 제외. 무트래픽성 신호는 D의 Worker cron 점검으로 대체한다.
 
 ## D. Cron 기반 알림 (Cloudflare Cron Trigger 1개로 통합)
 
 - [x] **Cron 트리거 + `scheduled()` 핸들러** `[코드]` — `wrangler.toml [triggers] crons` 설정. 매일 03:00 KST 실행.
-- [x] **(D-1) Dead Man's Switch — 최근 활동 없음** `[코드]` — 최근 24시간 운영 기록 또는 로그인 시도 기록이 없으면 Discord 알림. UptimeRobot heartbeat 유료 기능의 무료 대체 신호로 사용.
+- [x] **(D-1) Dead Man's Switch — 최근 활동 없음** `[코드]` — 최근 24시간 운영 기록 또는 로그인 시도 기록이 없으면 Discord 알림. UptimeRobot heartbeat 유료 기능의 무료 대체 신호로 사용. 단, 실제 HTTP 트래픽이 아니라 **DB 쓰기/로그인 활동 근사값**이며 정기 휴무일에는 false positive가 날 수 있다.
 - [x] **(D-2) 데이터 무결성 감사** `[코드]` — 일 1회 핵심 불변식 검증 쿼리 → 위반 행 있으면 Discord. 예: 음수 사용량/단가/재고, `version < 1`, 음수 정렬값.
-- [ ] **(D-3) 무료 요청 한도 50%/80% 알림** `[코드/보류]` — Cloudflare GraphQL Analytics로 월 요청수를 조회해야 한다. 구현 전 Worker 런타임에 `CF_ACCOUNT_ID`, `CF_ANALYTICS_TOKEN`이 필요하고, 중복 방지 저장소(KV 또는 DB 테이블)를 정해야 한다.
+- [ ] **(D-3) 무료 요청 한도 50%/80% 알림** `[코드/보류]` — Cloudflare Workers Free 한도는 일 기준 요청량이므로 월 기준이 아니라 **일 기준**으로 봐야 한다. 현재 규모(하루 수십 요청)에서는 우선순위가 낮아 보류한다.
 
 ## E. 프론트엔드 관측 (RUM)
 
@@ -54,12 +55,13 @@
 
 ## G. 데이터 백업 / 복구 (관측과 별개지만 같은 안전망)
 
-> 마이그레이션은 "스키마 구조" 버전 관리고, 백업은 "행 데이터" 복구용이라 **다른 것**이다. 현재 백업은 GitHub Actions + R2로 1차 구현했고, 수동 실행 검증까지 완료했다.
+> 마이그레이션은 "스키마 구조" 버전 관리고, 백업은 "행 데이터" 복구용이라 **다른 것**이다. 현재 백업은 GitHub Actions + R2로 1차 구현했고, 수동 실행 검증까지 완료했다. 백업은 증분이 아니라 매번 DB 전체 덤프를 새 파일로 저장한다.
 
-- [x] **백업 잡 = GitHub Actions 스케줄** `[CI]` — Worker는 CLI 실행이 안 되므로, 주기 워크플로가 `turso db shell <db> .dump`로 SQL 덤프를 만든다. 매주 일요일 03:00 KST 실행 + 수동 실행 가능.
+- [x] **백업 잡 = GitHub Actions 스케줄** `[CI]` — Worker는 CLI 실행이 안 되므로, 주기 워크플로가 `turso db shell <db> .dump`로 SQL 덤프를 만든다. 매일 03:00 KST 실행 + 수동 실행 가능.
 - [x] **덤프 보관 = Cloudflare R2(비공개 버킷)** `[외부]` — 덤프를 R2에 업로드(S3 호환 API), 파일명에 날짜. 현재 버킷: `shinkal-db-backups`.
 - [x] **백업 알림 = Discord 직접 발송** `[CI]` — UptimeRobot heartbeat는 유료라 제외. GitHub Actions가 성공/실패를 Discord webhook으로 한글 메시지 발송.
-- [ ] **복구 절차 문서화** `[문서]` — 새 Turso DB 생성 후 `turso db shell <db> < dump.sql`로 import하는 절차를 런북에. 성공: 덤프 1개로 빈 DB 복원 검증.
+- [x] **복구 절차 문서화** `[문서]` — [백업 / 복구 런북](../operate/backup_restore.md)에 최신 덤프 복원 리허설과 실제 복구 절차를 문서화.
+- [ ] **복원 리허설 실행 확인** `[CI/수동]` — GitHub Actions `Restore Rehearsal`을 수동 실행해 최신 R2 덤프가 임시 Turso DB에 복원되는지 확인. 성공 시 Discord 알림.
 
 참고/제한:
 - **R2 무료**: 약 10GB 저장 + **egress 무료**, 기본 비공개. 우리 덤프는 작아 충분(상업적 사용 허용). 정확 수치는 Cloudflare 요금 페이지 확인.
@@ -67,6 +69,7 @@
 - 덤프엔 **실제 운영 데이터**가 들어가니 반드시 **비공개 저장소**(공개 GitHub repo 금지). GitHub private repo도 가능하나 용량/히스토리 비대 문제로 R2 권장.
 - UptimeRobot heartbeat는 유료 플랜 기능이라 현재 제외. 백업 성공/실패는 GitHub Actions에서 Discord webhook으로 직접 알린다.
 - 백업용 GitHub Actions Secrets: `TURSO_DATABASE_NAME`, `TURSO_API_TOKEN`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ENDPOINT`, `R2_BUCKET`, `DISCORD_WEBHOOK_URL`.
+- R2 lifecycle rule은 대시보드에서 `turso/` prefix, 90일 만료로 시작 권장.
 
 ## 검증 시나리오
 
@@ -74,7 +77,7 @@
 - [ ] DB 연결 끊고 `/ready` 503 / `/health` 200 확인.
 - [ ] 불변식 위반 행 심고 cron 실행 → 감사 알림.
 - [ ] 무트래픽(또는 최신 기록 24h+ 과거) 모의 → DMS 알림.
-- [ ] 요청수 50/80% 경계 모의 → 각 1회 알림(중복 없음).
+- [ ] GitHub Actions `Restore Rehearsal` 실행 → 최신 R2 덤프가 임시 Turso DB에 복원되고 삭제됨.
 - [ ] 프론트에서 강제 throw → 브라우저 에러가 Sentry에 수집.
 
 ## 필요한 환경변수/시크릿 (추가분)

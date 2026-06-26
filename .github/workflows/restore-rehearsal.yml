@@ -1,31 +1,25 @@
-name: Backup Turso DB
+name: Restore Rehearsal
 
 on:
   workflow_dispatch:
-  schedule:
-    # Daily 03:00 KST.
-    - cron: "0 18 * * *"
 
 jobs:
-  backup:
+  restore-rehearsal:
     runs-on: ubuntu-latest
     env:
       TURSO_API_TOKEN: ${{ secrets.TURSO_API_TOKEN }}
-      TURSO_DATABASE_NAME: ${{ secrets.TURSO_DATABASE_NAME }}
+      TURSO_GROUP: ${{ secrets.TURSO_GROUP }}
       R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
       R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
       R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
       R2_BUCKET: ${{ secrets.R2_BUCKET }}
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
     steps:
-      - uses: actions/checkout@v4
-
       - name: Validate required secrets
         run: |
           set -euo pipefail
           required=(
             TURSO_API_TOKEN
-            TURSO_DATABASE_NAME
             R2_ACCESS_KEY_ID
             R2_SECRET_ACCESS_KEY
             R2_ENDPOINT
@@ -38,13 +32,6 @@ jobs:
               exit 1
             fi
           done
-          case "$DISCORD_WEBHOOK_URL" in
-            https://discord.com/api/webhooks/*|https://discordapp.com/api/webhooks/*) ;;
-            *)
-              echo "DISCORD_WEBHOOK_URL must be a full Discord webhook URL starting with https://discord.com/api/webhooks/" >&2
-              exit 1
-              ;;
-          esac
 
       - name: Install Turso CLI
         run: |
@@ -60,17 +47,7 @@ jobs:
           python -m pip install --user awscli
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Create SQL dump
-        run: |
-          set -euo pipefail
-          stamp="$(date -u +'%Y%m%dT%H%M%SZ')"
-          backup_file="shinkal-${TURSO_DATABASE_NAME}-${stamp}.sql"
-          turso db shell "$TURSO_DATABASE_NAME" .dump > "$backup_file"
-          gzip "$backup_file"
-          echo "BACKUP_FILE=${backup_file}.gz" >> "$GITHUB_ENV"
-          echo "BACKUP_OBJECT=turso/${backup_file}.gz" >> "$GITHUB_ENV"
-
-      - name: Upload dump to R2
+      - name: Download latest R2 backup
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
@@ -79,8 +56,41 @@ jobs:
           set -euo pipefail
           endpoint="${R2_ENDPOINT%/}"
           endpoint="${endpoint%/$R2_BUCKET}"
-          aws s3 cp "$BACKUP_FILE" "s3://$R2_BUCKET/$BACKUP_OBJECT" \
+          latest_object="$(aws s3api list-objects-v2 \
+            --bucket "$R2_BUCKET" \
+            --prefix "turso/" \
+            --query 'sort_by(Contents,&LastModified)[-1].Key' \
+            --output text \
+            --endpoint-url "$endpoint")"
+          if [ -z "$latest_object" ] || [ "$latest_object" = "None" ]; then
+            echo "No backup object found under s3://$R2_BUCKET/turso/" >&2
+            exit 1
+          fi
+          aws s3 cp "s3://$R2_BUCKET/$latest_object" backup.sql.gz \
             --endpoint-url "$endpoint"
+          gunzip -c backup.sql.gz > backup.sql
+          echo "BACKUP_OBJECT=$latest_object" >> "$GITHUB_ENV"
+
+      - name: Restore into temporary Turso database
+        run: |
+          set -euo pipefail
+          restore_db="shinkal-restore-${GITHUB_RUN_ID}"
+          group="${TURSO_GROUP:-default}"
+          echo "RESTORE_DB=$restore_db" >> "$GITHUB_ENV"
+          turso db create "$restore_db" --from-dump backup.sql --group "$group" --wait
+
+      - name: Verify restored database
+        run: |
+          set -euo pipefail
+          turso db shell "$RESTORE_DB" "select count(*) as table_count from sqlite_master where type = 'table' and name not like 'sqlite_%';"
+          turso db shell "$RESTORE_DB" "select count(*) as branch_count from branch;"
+
+      - name: Destroy temporary database
+        if: always()
+        run: |
+          if [ -n "${RESTORE_DB:-}" ]; then
+            turso db destroy "$RESTORE_DB" --yes || true
+          fi
 
       - name: Notify Discord success
         if: success()
@@ -88,7 +98,7 @@ jobs:
           message="$(jq -nc \
             --arg object "$BACKUP_OBJECT" \
             --arg run_url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
-            '{content: ("신칼 DB 백업이 완료됐습니다.\n- 저장 위치: R2 `" + $object + "`\n- 실행 로그: " + $run_url)}')"
+            '{content: ("신칼 DB 백업 복원 리허설이 성공했습니다.\n- 검증 백업: R2 `" + $object + "`\n- 임시 DB: 생성 후 삭제 완료\n- 실행 로그: " + $run_url)}')"
           curl -fsS -H "Content-Type: application/json" \
             -d "$message" \
             "$DISCORD_WEBHOOK_URL"
@@ -98,7 +108,7 @@ jobs:
         run: |
           message="$(jq -nc \
             --arg run_url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
-            '{content: ("신칼 DB 백업이 실패했습니다.\n- 확인 필요: GitHub Actions 로그\n- 실행 로그: " + $run_url)}')"
+            '{content: ("신칼 DB 백업 복원 리허설이 실패했습니다.\n- 확인 필요: GitHub Actions 로그\n- 실행 로그: " + $run_url)}')"
           curl -fsS -H "Content-Type: application/json" \
             -d "$message" \
             "$DISCORD_WEBHOOK_URL"

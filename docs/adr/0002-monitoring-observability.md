@@ -99,5 +99,5 @@ Accepted
 |---|---|
 | 구현 | requestId 미들웨어 / Sentry(5xx만) / `/health`·`/ready` / Cron(DMS·감사·한도) / Discord 유틸 / 프론트 RUM → [모니터링 구현 계획](../plans/monitoring.md) |
 | 시크릿 등록 | `SENTRY_DSN`, `DISCORD_WEBHOOK_URL`, `CF_ANALYTICS_TOKEN` (Worker 시크릿) |
-| 백업 | 데이터 복구용 Turso 덤프는 GitHub Actions가 매일 R2에 저장한다. 복구 절차는 [백업 / 복구 런북](../operate/backup_restore.md) 참고 |
+| 백업 | 데이터 복구용 Turso 덤프는 GitHub Actions가 2일마다 R2에 저장한다. 복구 절차는 [백업 / 복구 런북](../operate/backup_restore.md) 참고 |
 | 재검토 시점 | 트래픽이 일 수천 건↑ 또는 서비스가 여러 개로 분리될 때 — 분산 추적·온콜·요약 테이블 재검토 |

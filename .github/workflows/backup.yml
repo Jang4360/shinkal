@@ -3,8 +3,8 @@ name: Backup Turso DB
 on:
   workflow_dispatch:
   schedule:
-    # Daily 03:00 KST.
-    - cron: "0 18 * * *"
+    # Every two days at 03:00 KST.
+    - cron: "0 18 */2 * *"
 
 jobs:
   backup:

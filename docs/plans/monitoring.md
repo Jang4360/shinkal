@@ -57,7 +57,7 @@
 
 > 마이그레이션은 "스키마 구조" 버전 관리고, 백업은 "행 데이터" 복구용이라 **다른 것**이다. 현재 백업은 GitHub Actions + R2로 1차 구현했고, 수동 실행 검증까지 완료했다. 백업은 증분이 아니라 매번 DB 전체 덤프를 새 파일로 저장한다.
 
-- [x] **백업 잡 = GitHub Actions 스케줄** `[CI]` — Worker는 CLI 실행이 안 되므로, 주기 워크플로가 `turso db shell <db> .dump`로 SQL 덤프를 만든다. 매일 03:00 KST 실행 + 수동 실행 가능.
+- [x] **백업 잡 = GitHub Actions 스케줄** `[CI]` — Worker는 CLI 실행이 안 되므로, 주기 워크플로가 `turso db shell <db> .dump`로 SQL 덤프를 만든다. 2일마다 03:00 KST 실행 + 수동 실행 가능.
 - [x] **덤프 보관 = Cloudflare R2(비공개 버킷)** `[외부]` — 덤프를 R2에 업로드(S3 호환 API), 파일명에 날짜. 현재 버킷: `shinkal-db-backups`.
 - [x] **백업 알림 = Discord 직접 발송** `[CI]` — UptimeRobot heartbeat는 유료라 제외. GitHub Actions가 성공/실패를 Discord webhook으로 한글 메시지 발송.
 - [x] **복구 절차 문서화** `[문서]` — [백업 / 복구 런북](../operate/backup_restore.md)에 최신 덤프 복원 리허설과 실제 복구 절차를 문서화.

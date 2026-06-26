@@ -5,15 +5,15 @@
 ## 현재 정책
 
 - 백업 방식: `turso db shell <db> .dump`로 **DB 전체 SQL 덤프** 생성.
-- 백업 주기: 매일 03:00 KST.
+- 백업 주기: 2일마다 03:00 KST.
 - 저장 위치: Cloudflare R2 비공개 버킷 `shinkal-db-backups`, `turso/*.sql.gz`.
 - 알림: GitHub Actions가 백업 성공/실패를 Discord로 직접 전송.
 
-중요: 이 백업은 증분 백업이 아니다. 매 실행마다 그 시점의 전체 DB 내용을 새 `.sql.gz` 파일로 저장한다. 따라서 일1회로 바꾸면 매일 "전체 스냅샷"이 하나씩 추가된다.
+중요: 이 백업은 증분 백업이 아니다. 매 실행마다 그 시점의 전체 DB 내용을 새 `.sql.gz` 파일로 저장한다. 따라서 2일 주기로 실행하면 이틀마다 "전체 스냅샷"이 하나씩 추가된다.
 
 ## 일상 점검
 
-1. GitHub Actions `Backup Turso DB`가 매일 성공하는지 확인한다.
+1. GitHub Actions `Backup Turso DB`가 2일마다 성공하는지 확인한다.
 2. Discord `monitoring` 채널에 성공 메시지가 오는지 확인한다.
 3. R2 `shinkal-db-backups/turso/`에 날짜별 `.sql.gz` 파일이 쌓이는지 확인한다.
 4. R2 수명 주기 규칙으로 오래된 덤프를 정리한다. 시작값은 90일 보존을 권장한다.

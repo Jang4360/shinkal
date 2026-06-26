@@ -360,6 +360,13 @@ app.post('/api/auth/logout', (c) => {
 
 app.use('/api/*', requireAuth);
 
+app.post('/api/ops/sentry-test', (c) => {
+  if (c.req.header('x-shinkal-test') !== 'sentry') {
+    return apiError(c, 403, 'FORBIDDEN', 'SYSTEM', 'LOAD', '테스트 요청 확인 헤더가 필요합니다.');
+  }
+  throw new Error(`Sentry Discord alert test ${getRequestId(c)}`);
+});
+
 app.get('/api/branches', async (c) => {
   const rows = await getDb().select().from(branch).where(eq(branch.isActive, 1)).orderBy(branch.branchId);
   return c.json({ branches: rows.map((row) => ({ branchId: row.branchId, name: row.name })) });

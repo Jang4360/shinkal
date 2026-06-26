@@ -1,0 +1,90 @@
+name: Backup Turso DB
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Sundays 03:00 KST.
+    - cron: "0 18 * * 6"
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      TURSO_API_TOKEN: ${{ secrets.TURSO_API_TOKEN }}
+      TURSO_DATABASE_NAME: ${{ secrets.TURSO_DATABASE_NAME }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        run: |
+          set -euo pipefail
+          required=(
+            TURSO_API_TOKEN
+            TURSO_DATABASE_NAME
+            R2_ACCESS_KEY_ID
+            R2_SECRET_ACCESS_KEY
+            R2_ENDPOINT
+            R2_BUCKET
+            DISCORD_WEBHOOK_URL
+          )
+          for key in "${required[@]}"; do
+            if [ -z "${!key}" ]; then
+              echo "Missing required secret: $key" >&2
+              exit 1
+            fi
+          done
+
+      - name: Install Turso CLI
+        run: |
+          curl -sSfL https://get.tur.so/install.sh | bash
+          echo "$HOME/.turso" >> "$GITHUB_PATH"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install AWS CLI
+        run: |
+          python -m pip install --user awscli
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Create SQL dump
+        run: |
+          set -euo pipefail
+          stamp="$(date -u +'%Y%m%dT%H%M%SZ')"
+          backup_file="shinkal-${TURSO_DATABASE_NAME}-${stamp}.sql"
+          turso db shell "$TURSO_DATABASE_NAME" .dump > "$backup_file"
+          gzip "$backup_file"
+          echo "BACKUP_FILE=${backup_file}.gz" >> "$GITHUB_ENV"
+          echo "BACKUP_OBJECT=turso/${backup_file}.gz" >> "$GITHUB_ENV"
+
+      - name: Upload dump to R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          set -euo pipefail
+          endpoint="${R2_ENDPOINT%/}"
+          endpoint="${endpoint%/$R2_BUCKET}"
+          aws s3 cp "$BACKUP_FILE" "s3://$R2_BUCKET/$BACKUP_OBJECT" \
+            --endpoint-url "$endpoint"
+
+      - name: Notify Discord success
+        if: success()
+        run: |
+          curl -fsS -H "Content-Type: application/json" \
+            -d "{\"content\":\"Turso backup completed: ${BACKUP_OBJECT}\"}" \
+            "$DISCORD_WEBHOOK_URL"
+
+      - name: Notify Discord failure
+        if: failure()
+        run: |
+          curl -fsS -H "Content-Type: application/json" \
+            -d "{\"content\":\"Turso backup failed: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \
+            "$DISCORD_WEBHOOK_URL"

@@ -360,11 +360,34 @@ app.post('/api/auth/logout', (c) => {
 
 app.use('/api/*', requireAuth);
 
-app.post('/api/ops/sentry-test', (c) => {
+app.post('/api/ops/sentry-test', async (c) => {
   if (c.req.header('x-shinkal-test') !== 'sentry') {
     return apiError(c, 403, 'FORBIDDEN', 'SYSTEM', 'LOAD', '테스트 요청 확인 헤더가 필요합니다.');
   }
-  return apiError(c, 500, 'INTERNAL_ERROR', 'SYSTEM', 'LOAD', 'Sentry Discord 알림 테스트입니다.');
+  const id = getRequestId(c);
+  Sentry.withScope((scope) => {
+    scope.setTag('requestId', id);
+    scope.setTag('domain', 'SYSTEM');
+    scope.setTag('operation', 'LOAD');
+    scope.setFingerprint(['sentry-discord-test', id]);
+    Sentry.captureException(new Error(`Sentry Discord alert test ${id}`));
+  });
+  await Sentry.flush(2000);
+  return c.json(
+    {
+      error: {
+        code: 'INTERNAL_ERROR',
+        domain: 'SYSTEM',
+        operation: 'LOAD',
+        message: 'Sentry Discord 알림 테스트입니다.',
+        requestId: id,
+        timestamp: new Date().toISOString(),
+        field: null,
+        details: null,
+      },
+    },
+    500,
+  );
 });
 
 app.get('/api/branches', async (c) => {

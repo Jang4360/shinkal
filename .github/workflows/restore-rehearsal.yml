@@ -78,11 +78,31 @@ jobs:
           group="${TURSO_GROUP:-default}"
           echo "RESTORE_DB=$restore_db" >> "$GITHUB_ENV"
           turso db create "$restore_db" --group "$group" --wait
+          for attempt in $(seq 1 12); do
+            if turso db shell "$restore_db" "select 1;" >/dev/null 2>&1; then
+              break
+            fi
+            if [ "$attempt" = "12" ]; then
+              echo "Temporary Turso database route was not ready after retries." >&2
+              exit 1
+            fi
+            sleep 5
+          done
           turso db shell "$restore_db" < backup.sql
 
       - name: Verify restored database
         run: |
           set -euo pipefail
+          for attempt in $(seq 1 12); do
+            if turso db shell "$RESTORE_DB" "select 1;" >/dev/null 2>&1; then
+              break
+            fi
+            if [ "$attempt" = "12" ]; then
+              echo "Temporary Turso database route was not ready for verification after retries." >&2
+              exit 1
+            fi
+            sleep 5
+          done
           turso db shell "$RESTORE_DB" "select count(*) as table_count from sqlite_master where type = 'table' and name not like 'sqlite_%';"
           turso db shell "$RESTORE_DB" "select count(*) as branch_count from branch;"
 

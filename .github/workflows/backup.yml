@@ -90,7 +90,7 @@ jobs:
             "$DISCORD_WEBHOOK_URL"
 
       - name: Notify Discord failure
-        if: failure()
+        if: failure() && (startsWith(env.DISCORD_WEBHOOK_URL, 'https://discord.com/api/webhooks/') || startsWith(env.DISCORD_WEBHOOK_URL, 'https://discordapp.com/api/webhooks/'))
         run: |
           curl -fsS -H "Content-Type: application/json" \
             -d "{\"content\":\"Turso backup failed: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}" \

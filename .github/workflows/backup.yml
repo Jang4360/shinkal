@@ -38,6 +38,13 @@ jobs:
               exit 1
             fi
           done
+          case "$DISCORD_WEBHOOK_URL" in
+            https://discord.com/api/webhooks/*|https://discordapp.com/api/webhooks/*) ;;
+            *)
+              echo "DISCORD_WEBHOOK_URL must be a full Discord webhook URL starting with https://discord.com/api/webhooks/" >&2
+              exit 1
+              ;;
+          esac
 
       - name: Install Turso CLI
         run: |

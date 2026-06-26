@@ -364,7 +364,7 @@ app.post('/api/ops/sentry-test', (c) => {
   if (c.req.header('x-shinkal-test') !== 'sentry') {
     return apiError(c, 403, 'FORBIDDEN', 'SYSTEM', 'LOAD', '테스트 요청 확인 헤더가 필요합니다.');
   }
-  throw new Error(`Sentry Discord alert test ${getRequestId(c)}`);
+  return apiError(c, 500, 'INTERNAL_ERROR', 'SYSTEM', 'LOAD', 'Sentry Discord 알림 테스트입니다.');
 });
 
 app.get('/api/branches', async (c) => {

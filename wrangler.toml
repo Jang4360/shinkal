@@ -3,6 +3,13 @@ main = "apps/api/src/worker.ts"
 compatibility_date = "2026-06-24"
 compatibility_flags = ["nodejs_compat"]
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[triggers]
+crons = ["0 18 * * *"]
+
 [assets]
 directory = "apps/web/dist"
 binding = "ASSETS"
@@ -11,3 +18,4 @@ not_found_handling = "single-page-application"
 [vars]
 COOKIE_SECURE = "true"
 COOKIE_SAME_SITE = "Lax"
+OPS_MIN_ACTIVITY_HOURS = "24"

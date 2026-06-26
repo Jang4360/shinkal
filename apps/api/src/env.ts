@@ -15,8 +15,14 @@ export const env = {
   APP_PASSWORD: process.env.APP_PASSWORD,
   AUTH_TOKEN_SECRET: process.env.AUTH_TOKEN_SECRET,
   APP_ORIGIN: process.env.APP_ORIGIN || 'http://localhost:5173',
+  APP_ENV: process.env.APP_ENV || process.env.NODE_ENV || 'development',
   COOKIE_SECURE: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : process.env.NODE_ENV === 'production',
   COOKIE_SAME_SITE: process.env.COOKIE_SAME_SITE || (process.env.NODE_ENV === 'production' ? 'None' : 'Lax'),
+  SENTRY_DSN: process.env.SENTRY_DSN,
+  DISCORD_WEBHOOK_URL: process.env.DISCORD_WEBHOOK_URL,
+  CF_ANALYTICS_TOKEN: process.env.CF_ANALYTICS_TOKEN,
+  CF_ACCOUNT_ID: process.env.CF_ACCOUNT_ID || process.env.CLOUDFLARE_ACCOUNT_ID,
+  OPS_MIN_ACTIVITY_HOURS: process.env.OPS_MIN_ACTIVITY_HOURS || '24',
   PORT: Number(process.env.PORT || 8787),
 };
 

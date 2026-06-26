@@ -15,6 +15,8 @@
   "dependencies": {
     "@hono/node-server": "^1.13.7",
     "@libsql/client": "^0.14.0",
+    "@sentry/cloudflare": "^10.62.0",
+    "@sentry/hono": "^10.62.0",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.36.4",
     "hono": "^4.6.14",

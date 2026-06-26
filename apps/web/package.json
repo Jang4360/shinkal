@@ -9,6 +9,7 @@
     "preview": "vite preview --host 0.0.0.0 --port 4173"
   },
   "dependencies": {
+    "@sentry/react": "^10.62.0",
     "@vitejs/plugin-react": "^4.3.4",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",

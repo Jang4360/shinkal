@@ -1,4 +1,5 @@
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
+import * as Sentry from '@sentry/hono/cloudflare';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { and, desc, eq, inArray, lt, sql } from 'drizzle-orm';
@@ -29,11 +30,25 @@ type Domain =
   | 'PRODUCT_CHECKLIST'
   | 'INGREDIENT_SETTINGS'
   | 'PRODUCT_SETTINGS'
+  | 'SYSTEM'
   | 'STATS';
 
 type Operation = 'LOGIN' | 'LOAD' | 'SAVE' | 'CREATE' | 'UPDATE' | 'DELETE' | 'REORDER';
 
-const app = new Hono();
+type AppBindings = {
+  SENTRY_DSN?: string;
+  DISCORD_WEBHOOK_URL?: string;
+  CF_ANALYTICS_TOKEN?: string;
+  CF_ACCOUNT_ID?: string;
+  OPS_MIN_ACTIVITY_HOURS?: string;
+  APP_ENV?: string;
+};
+
+type AppVariables = {
+  requestId: string;
+};
+
+const app = new Hono<{ Bindings: AppBindings; Variables: AppVariables }>();
 const tokenSecret = new TextEncoder().encode(env.AUTH_TOKEN_SECRET!);
 const verdicts = new Set(['정상', '과다', '부족']);
 const productUnits = new Set(['박스', '봉', '묶음', '줄', '짝', '개', '통']);
@@ -57,6 +72,10 @@ function requestId() {
   return `req_${new Date().toISOString().slice(0, 10)}_${crypto.randomUUID().slice(0, 8)}`;
 }
 
+function getRequestId(c: any) {
+  return c.get?.('requestId') || requestId();
+}
+
 function apiError(
   c: any,
   status: number,
@@ -67,8 +86,25 @@ function apiError(
   field: string | null = null,
   details: Record<string, unknown> | null = null,
 ) {
-  const id = requestId();
-  console.error(`[${id}] ${domain}.${operation} ${code} ${status}`);
+  const id = getRequestId(c);
+  console.error({
+    event: 'api_error',
+    requestId: id,
+    domain,
+    operation,
+    code,
+    status,
+    message,
+  });
+  if (status >= 500) {
+    Sentry.withScope((scope) => {
+      scope.setTag('requestId', id);
+      scope.setTag('domain', domain);
+      scope.setTag('operation', operation);
+      scope.setContext('api_error', { code, status, field, details });
+      Sentry.captureException(new Error(`${domain}.${operation} ${code}: ${message}`));
+    });
+  }
   return c.json(
     {
       error: {
@@ -255,6 +291,29 @@ async function productCatalogVersion(executor?: ReturnType<typeof getDb> | any) 
 
 app.use(
   '*',
+  async (c, next) => {
+    const id = c.req.header('x-request-id') || requestId();
+    c.set('requestId', id);
+    c.header('X-Request-Id', id);
+    await next();
+  },
+);
+
+app.use(
+  '*',
+  Sentry.sentry(app, (bindings) => {
+    const dsn = bindings?.SENTRY_DSN || env.SENTRY_DSN;
+    return {
+      dsn,
+      enabled: Boolean(dsn),
+      environment: bindings?.APP_ENV || env.APP_ENV,
+      tracesSampleRate: 0.05,
+    };
+  }),
+);
+
+app.use(
+  '*',
   cors({
     origin: env.APP_ORIGIN.split(',').map((origin) => origin.trim()),
     credentials: true,
@@ -262,6 +321,15 @@ app.use(
 );
 
 app.get('/health', (c) => c.json({ ok: true }));
+app.get('/ready', async (c) => {
+  try {
+    await getLibsql().execute('select 1 as ok');
+    return c.json({ ok: true });
+  } catch (error) {
+    console.error({ event: 'readiness_failed', requestId: getRequestId(c), error: error instanceof Error ? error.message : String(error) });
+    return apiError(c, 503, 'DB_UNAVAILABLE', 'SYSTEM', 'LOAD', '데이터베이스 연결 확인에 실패했습니다.');
+  }
+});
 
 app.post('/api/auth/login', async (c) => {
   const body = await c.req.json().catch(() => ({}));

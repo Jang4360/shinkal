@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import * as Sentry from '@sentry/react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import {
@@ -33,6 +34,14 @@ import {
   Utensils,
 } from 'lucide-react';
 import './styles.css';
+
+if (import.meta.env.VITE_SENTRY_DSN) {
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    environment: import.meta.env.MODE,
+    tracesSampleRate: 0.05,
+  });
+}
 
 const todayKst = () => {
   const now = new Date();

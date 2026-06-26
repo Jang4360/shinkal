@@ -77,7 +77,8 @@ jobs:
           restore_db="shinkal-restore-${GITHUB_RUN_ID}"
           group="${TURSO_GROUP:-default}"
           echo "RESTORE_DB=$restore_db" >> "$GITHUB_ENV"
-          turso db create "$restore_db" --from-dump backup.sql --group "$group" --wait
+          turso db create "$restore_db" --group "$group" --wait
+          turso db shell "$restore_db" < backup.sql
 
       - name: Verify restored database
         run: |

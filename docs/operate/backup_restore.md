@@ -47,7 +47,8 @@ gunzip -c backup.sql.gz > backup.sql
 3. 새 Turso DB를 만든다.
 
 ```bash
-turso db create shinkal-restore-prod --from-dump backup.sql --group default --wait
+turso db create shinkal-restore-prod --group default --wait
+turso db shell shinkal-restore-prod < backup.sql
 ```
 
 4. 기본 검증을 수행한다.
